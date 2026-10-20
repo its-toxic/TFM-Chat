@@ -282,3 +282,33 @@ header > button, .header-btns button { padding: 8px 12px; font-size: 14px; }
   .composer { gap: 6px; padding: 8px; }
   .composer button { padding: 10px 8px; }
 }
+/* كارت الدخول بخلفية بنفسجي */
+#auth-screen .card,
+#recovery-screen .card {
+  background: linear-gradient(160deg, #6a2bd6 0%, #4b1a9e 55%, #2e0f66 100%);
+  border: 1px solid #b388ff;
+  box-shadow: 0 20px 60px rgba(60, 10, 120, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+#auth-screen .auth-tabs,
+#recovery-screen .auth-tabs {
+  background: rgba(20, 8, 50, 0.6);
+}
+
+#auth-screen input,
+#recovery-screen input {
+  background: rgba(20, 8, 50, 0.7);
+  border: 1px solid #8f5cff;
+}
+
+#auth-screen input:focus,
+#recovery-screen input:focus {
+  border-color: #ff7ad9;
+  box-shadow: 0 0 0 3px rgba(255, 122, 217, 0.25);
+}
+
+#auth-screen h1,
+#recovery-screen h1 {
+  color: #ffffff;
+  text-shadow: 0 2px 12px rgba(255, 110, 199, 0.5);
+}
