@@ -63,6 +63,10 @@ function fileName(url) {
   }
 }
 
+// ---------- زرار القايمة على الموبايل ----------
+$('menu-toggle').onclick = () => $('header-extra').classList.toggle('collapsed');
+$('header-extra').classList.add('collapsed');
+
 // ---------- شاشة الدخول ----------
 document.querySelectorAll('.auth-tab').forEach(t => {
   t.onclick = () => setAuthMode(t.dataset.mode);
@@ -162,7 +166,7 @@ async function enterChat(userId) {
   subscribeToMessages();
 }
 
-// ---------- تغيير الاسم المعروض ----------
+// ---------- تغيير الاسم ----------
 $('name-btn').onclick = async () => {
   if (!currentProfile) return;
   const name = prompt('اكتب الاسم الجديد:', currentProfile.display_name || '');
@@ -599,8 +603,3 @@ async function loadUsers() {
     box.appendChild(row);
   });
 }
-// ---------- إظهار/إخفاء قايمة الهيدر على الموبايل ----------
-const menuToggle = $('menu-toggle');
-const headerExtra = $('header-extra');
-headerExtra.classList.add('collapsed');
-menuToggle.onclick = () => headerExtra.classList.toggle('collapsed');
