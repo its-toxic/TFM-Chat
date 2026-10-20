@@ -226,7 +226,7 @@ header > button, .header-btns button { padding: 8px 12px; font-size: 14px; }
   padding: 12px;
 }
 .modal-box {
-  background: #58031b;
+  background: #3a0816;
   border:
 /* كسر الرمادي وإعطاء خلفية بنفسجية كاملة لشاشة الدخول */
 html, body {
@@ -235,6 +235,6 @@ html, body {
 
 #auth-screen,
 #recovery-screen {
-  background: linear-gradient(160deg, #370909 0%, #640a0a 50%, #1e0a3f 100%) !important;
+  background: linear-gradient(160deg, #7b3fe4 0%, #4b1a9e 50%, #1e0a3f 100%) !important;
   min-height: 100vh;
 }
