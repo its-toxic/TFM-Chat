@@ -4,8 +4,8 @@
 
 body {
   font-family: Tahoma, Arial, sans-serif;
-  background: radial-gradient(circle at top, #1b1640 0%, #0c0a1a 70%);
-  color: #e9e7ff;
+  background: radial-gradient(circle at top, #dc143c 0%, #6b0a1f 60%, #2a0410 100%);
+  color: #fff5f7;
   height: 100vh;
   overflow: hidden;
 }
@@ -18,8 +18,8 @@ body {
 #auth-screen, #recovery-screen { align-items: center; justify-content: center; padding: 16px; }
 
 .card {
-  background: rgba(30, 24, 66, 0.92);
-  border: 1px solid #3b3280;
+  background: rgba(60, 8, 22, 0.92);
+  border: 1px solid #a3173a;
   padding: 28px 24px;
   border-radius: 20px;
   width: min(92vw, 360px);
@@ -29,29 +29,41 @@ body {
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
 }
 
-h1 { text-align: center; color: #b99cff; font-size: 26px; margin-bottom: 4px; }
-h3 { color: #b99cff; }
+h1 { text-align: center; color: #ffb3c1; font-size: 26px; margin-bottom: 4px; }
+h3 { color: #ffb3c1; }
 
-.auth-tabs { display: flex; background: #151131; border-radius: 12px; padding: 4px; }
+.logo {
+  display: block;
+  width: 120px;
+  height: auto;
+  margin: 0 auto 8px;
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.auth-tabs { display: flex; background: #2a0410; border-radius: 12px; padding: 4px; }
 .auth-tab {
-  flex: 1; background: transparent; color: #8f88c4;
+  flex: 1; background: transparent; color: #d98a9b;
   padding: 10px; border-radius: 10px;
 }
-.auth-tab.active { background: #7c5cff; color: #fff; }
+.auth-tab.active { background: linear-gradient(90deg, #dc143c, #ff4d6d); color: #fff; }
 
 input, select {
-  background: #151131;
-  border: 1px solid #3b3280;
-  color: #e9e7ff;
+  background: #2a0410;
+  border: 1px solid #a3173a;
+  color: #fff5f7;
   padding: 12px 14px;
   border-radius: 12px;
   font-size: 15px;
   outline: none;
 }
-input:focus { border-color: #ff6ec7; box-shadow: 0 0 0 3px rgba(255, 110, 199, 0.15); }
+input:focus {
+  border-color: #ff4d6d;
+  box-shadow: 0 0 0 3px rgba(220, 20, 60, 0.25);
+}
 
 button {
-  background: #7c5cff;
+  background: #dc143c;
   color: #fff;
   border: none;
   padding: 11px 16px;
@@ -65,16 +77,16 @@ button:active { transform: scale(0.97); }
 button:disabled { opacity: 0.4; cursor: not-allowed; }
 
 .primary {
-  background: linear-gradient(90deg, #7c5cff, #ff6ec7);
+  background: linear-gradient(90deg, #dc143c, #ff4d6d);
   font-weight: bold;
 }
-.ghost { background: #221c4a; color: #d9d4ff; }
-.danger-btn { background: #ff4f79; }
+.ghost { background: #4a0d1f; color: #ffd6de; }
+.danger-btn { background: #8b0a2e; }
 .danger { color: #ff7a9a !important; }
 
-.link-btn { background: none; color: #ff8fd0; padding: 4px; font-size: 14px; }
+.link-btn { background: none; color: #ff8fa8; padding: 4px; font-size: 14px; }
 
-.msg-text { font-size: 14px; min-height: 18px; text-align: center; color: #ff8fa8; }
+.msg-text { font-size: 14px; min-height: 18px; text-align: center; color: #ffb3c1; }
 .msg-text.ok { color: #6ee7b7; }
 
 /* ---------- الهيدر ---------- */
@@ -85,8 +97,8 @@ header {
   flex-wrap: wrap;
   gap: 8px;
   padding: 12px 14px;
-  background: rgba(24, 19, 56, 0.95);
-  border-bottom: 1px solid #3b3280;
+  background: rgba(60, 8, 22, 0.95);
+  border-bottom: 1px solid #7a1a33;
 }
 .user-label { font-weight: bold; color: #ffd166; }
 .header-btns { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -96,8 +108,8 @@ header > button, .header-btns button { padding: 8px 12px; font-size: 14px; }
   display: flex;
   gap: 8px;
   padding: 10px 14px;
-  background: #1a1545;
-  border-bottom: 1px solid #3b3280;
+  background: #3a0816;
+  border-bottom: 1px solid #7a1a33;
 }
 .search-bar input { flex: 1; }
 
@@ -113,22 +125,22 @@ header > button, .header-btns button { padding: 8px 12px; font-size: 14px; }
 
 .msg {
   position: relative;
-  background: #241d52;
+  background: #4a0d1f;
   padding: 10px 36px 10px 12px;
   border-radius: 16px 16px 16px 4px;
   max-width: 78%;
   align-self: flex-start;
   word-wrap: break-word;
-  border: 1px solid #332b6b;
+  border: 1px solid #7a1a33;
 }
 .msg.mine {
   align-self: flex-end;
-  background: linear-gradient(135deg, #5b3fd6, #8d4bd9);
+  background: linear-gradient(135deg, #dc143c, #8b1538);
   border-radius: 16px 16px 4px 16px;
   padding: 10px 12px 10px 36px;
 }
 
-.meta { font-size: 12px; color: #a9a3d8; margin-bottom: 4px; }
+.meta { font-size: 12px; color: #e8a5b3; margin-bottom: 4px; }
 .msg img, .msg video { max-width: 100%; border-radius: 10px; margin-top: 6px; }
 .msg video { display: block; }
 .msg audio { width: 100%; min-width: 220px; margin-top: 6px; }
@@ -139,7 +151,7 @@ header > button, .header-btns button { padding: 8px 12px; font-size: 14px; }
   top: 6px;
   left: 6px;
   background: transparent;
-  color: #cfc8ff;
+  color: #ffd6de;
   padding: 2px 6px;
   font-size: 18px;
   line-height: 1;
@@ -151,8 +163,8 @@ header > button, .header-btns button { padding: 8px 12px; font-size: 14px; }
   display: flex;
   gap: 8px;
   padding: 12px;
-  background: rgba(24, 19, 56, 0.95);
-  border-top: 1px solid #3b3280;
+  background: rgba(60, 8, 22, 0.95);
+  border-top: 1px solid #7a1a33;
   align-items: center;
 }
 .composer input { flex: 1; min-width: 0; }
@@ -164,8 +176,8 @@ header > button, .header-btns button { padding: 8px 12px; font-size: 14px; }
   z-index: 50;
   display: flex;
   flex-direction: column;
-  background: #1f1948;
-  border: 1px solid #3b3280;
+  background: #3a0816;
+  border: 1px solid #7a1a33;
   border-radius: 12px;
   overflow: hidden;
   min-width: 130px;
@@ -173,12 +185,12 @@ header > button, .header-btns button { padding: 8px 12px; font-size: 14px; }
 }
 .msg-menu button {
   background: transparent;
-  color: #e9e7ff;
+  color: #fff5f7;
   text-align: right;
   padding: 11px 14px;
   border-radius: 0;
 }
-.msg-menu button:hover { background: #2d2668; filter: none; }
+.msg-menu button:hover { background: #5a1028; filter: none; }
 
 /* ---------- النوافذ (السجل والكاميرا) ---------- */
 .modal {
@@ -192,8 +204,8 @@ header > button, .header-btns button { padding: 8px 12px; font-size: 14px; }
   padding: 12px;
 }
 .modal-box {
-  background: #1a1545;
-  border: 1px solid #3b3280;
+  background: #3a0816;
+  border: 1px solid #7a1a33;
   width: min(94vw, 460px);
   max-height: 85vh;
   border-radius: 18px;
@@ -207,8 +219,8 @@ header > button, .header-btns button { padding: 8px 12px; font-size: 14px; }
 #cam-modal .primary { width: 100%; }
 
 .tabs { display: flex; gap: 6px; }
-.tab { flex: 1; background: #221c4a; color: #a9a3d8; }
-.tab.active { background: linear-gradient(90deg, #7c5cff, #ff6ec7); color: #fff; }
+.tab { flex: 1; background: #4a0d1f; color: #e8a5b3; }
+.tab.active { background: linear-gradient(90deg, #dc143c, #ff4d6d); color: #fff; }
 
 #history-list {
   overflow-y: auto;
@@ -220,21 +232,21 @@ header > button, .header-btns button { padding: 8px 12px; font-size: 14px; }
   display: flex;
   flex-direction: column;
   gap: 4px;
-  background: #241d52;
+  background: #4a0d1f;
   padding: 10px 12px;
   border-radius: 12px;
-  color: #e9e7ff;
+  color: #fff5f7;
   text-decoration: none;
-  border: 1px solid #332b6b;
+  border: 1px solid #7a1a33;
 }
-.hist-item span { font-size: 12px; color: #a9a3d8; }
-.empty { text-align: center; color: #a9a3d8; padding: 20px 0; }
+.hist-item span { font-size: 12px; color: #e8a5b3; }
+.empty { text-align: center; color: #e8a5b3; padding: 20px 0; }
 
 /* ---------- الأدمن ---------- */
 .admin-panel {
-  background: #1a1545;
+  background: #3a0816;
   padding: 16px;
-  border-top: 1px solid #3b3280;
+  border-top: 1px solid #7a1a33;
   max-height: 40vh;
   overflow-y: auto;
 }
@@ -243,7 +255,7 @@ header > button, .header-btns button { padding: 8px 12px; font-size: 14px; }
   justify-content: space-between;
   align-items: center;
   padding: 8px 0;
-  border-bottom: 1px solid #3b3280;
+  border-bottom: 1px solid #7a1a33;
 }
 
 /* ---------- الموبايل ---------- */
