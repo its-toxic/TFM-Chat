@@ -2,6 +2,8 @@ const SUPABASE_URL = 'https://jifoamltmdgpawpjgrbz.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_IiaTAO0BNUJTp_pzVidhhA_e1g82vpi';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+const CONTACT_EMAIL = 'its.toxic0807@gmail.com';
+
 let currentProfile = null;
 let subscribed = false;
 let msgById = new Map();
@@ -105,6 +107,17 @@ $('forgot-btn').onclick = async () => {
   const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo });
   if (error) setMsg('auth-msg', error.message);
   else setMsg('auth-msg', 'بعتنالك لينك تغيير الباسورد على الإيميل', false);
+};
+
+// ---------- التواصل والشكاوي ----------
+$('contact-open').onclick = () => $('contact-modal').classList.remove('hidden');
+$('contact-close').onclick = () => $('contact-modal').classList.add('hidden');
+
+$('contact-send').onclick = () => {
+  const text = $('contact-msg').value.trim();
+  const subject = encodeURIComponent('TFM Chat - تواصل وشكوى');
+  const body = encodeURIComponent(text || '');
+  window.location.href = `mailto:${CONTACT_EMAIL}?subject=${subject}&body=${body}`;
 };
 
 // ---------- تغيير الباسورد بعد اللينك ----------

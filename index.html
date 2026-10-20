@@ -21,6 +21,7 @@
       <input id="password" type="password" placeholder="الباسورد" dir="ltr">
       <button id="auth-submit" class="primary">دخول</button>
       <button id="forgot-btn" class="link-btn">نسيت كلمة السر؟</button>
+      <button id="contact-open" class="ghost">التواصل والشكاوي</button>
       <p id="auth-msg" class="msg-text"></p>
     </div>
   </div>
@@ -68,6 +69,8 @@
       <button id="send-btn" class="primary">إرسال</button>
     </div>
 
+    <div class="credits">Created by <b>Ahmed</b> &nbsp;|&nbsp; Designed by <b>Ahmed</b></div>
+
     <div id="admin-panel" class="admin-panel hidden">
       <h3>إدارة الأدوار</h3>
       <div id="users-list"></div>
@@ -107,6 +110,22 @@
       <video id="cam-video" autoplay playsinline></video>
       <canvas id="cam-canvas" hidden></canvas>
       <button id="cam-snap" class="primary">تصوير وإرسال</button>
+    </div>
+  </div>
+
+  <!-- نافذة التواصل والشكاوي -->
+  <div id="contact-modal" class="modal hidden">
+    <div class="modal-box contact-box">
+      <div class="modal-head">
+        <h3>التواصل والشكاوي</h3>
+        <button id="contact-close" class="ghost">✕</button>
+      </div>
+      <p>للتواصل أو تقديم الشكاوي:</p>
+      <p class="contact-line">📞 010-325-12602</p>
+      <p>الإيميل:</p>
+      <p class="contact-line">its.toxic0807@gmail.com</p>
+      <textarea id="contact-msg" placeholder="اكتب شكواك أو رسالتك هنا..."></textarea>
+      <button id="contact-send" class="primary">إرسال عن طريق الإيميل</button>
     </div>
   </div>
 
