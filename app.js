@@ -162,6 +162,31 @@ $('name-btn').onclick = async () => {
   await loadMessages();
 };
 
+// ---------- صورة البروفايل ----------
+$('avatar-btn').onclick = () => $('avatar-input').click();
+
+$('avatar-input').onchange = async () => {
+  const file = $('avatar-input').files[0];
+  if (!file || !currentProfile) return;
+
+  const ext = (file.name.split('.').pop() || 'jpg').replace(/[^\w]/g, '');
+  const path = `${currentProfile.id}/avatar_${Date.now()}.${ext}`;
+  const { error } = await sb.storage.from('uploads').upload(path, file, {
+    contentType: file.type, upsert: true
+  });
+  if (error) return alert('فشل رفع الصورة: ' + error.message);
+
+  const { data } = sb.storage.from('uploads').getPublicUrl(path);
+  const { error: upErr } = await sb.from('profiles')
+    .update({ avatar_url: data.publicUrl })
+    .eq('id', currentProfile.id);
+  if (upErr) return alert('فشل الحفظ: ' + upErr.message);
+
+  await loadProfile(currentProfile.id);
+  await loadMessages();
+  $('avatar-input').value = '';
+};
+
 // ---------- البروفايل ----------
 async function loadProfile(userId) {
   const { data, error } = await sb.from('profiles')
@@ -177,6 +202,15 @@ async function loadProfile(userId) {
   const canWrite = data.role === 'admin' || data.role === 'sender';
 
   $('user-label').textContent = `${data.display_name || 'مستخدم'} (${data.role})`;
+
+  const av = $('my-avatar');
+  if (data.avatar_url) {
+    av.src = data.avatar_url;
+    av.hidden = false;
+  } else {
+    av.hidden = true;
+  }
+
   $('admin-toggle').classList.toggle('hidden', data.role !== 'admin');
   $('msg-input').disabled = !canWrite;
   $('send-btn').disabled = !canWrite;
@@ -195,8 +229,12 @@ function renderMessage(m) {
   div.className = 'msg' + (currentProfile && m.user_id === currentProfile.id ? ' mine' : '');
   div.dataset.id = m.id;
 
+  const avatar = m.profiles?.avatar_url
+    ? `<img class="msg-avatar" src="${esc(m.profiles.avatar_url)}" alt="">`
+    : '';
+
   let html = `<button class="dots" data-id="${m.id}">⋮</button>`;
-  html += `<div class="meta">${esc(m.profiles?.display_name || '?')} · ${new Date(m.created_at).toLocaleTimeString('ar-EG')}</div>`;
+  html += `<div class="meta">${avatar}${esc(m.profiles?.display_name || '?')} · ${new Date(m.created_at).toLocaleTimeString('ar-EG')}</div>`;
   if (m.content) html += `<div>${esc(m.content)}</div>`;
 
   if (m.file_url) {
@@ -224,7 +262,7 @@ function removeMessageEl(id) {
 
 async function loadMessages() {
   const { data, error } = await sb.from('messages')
-    .select('*, profiles(display_name)')
+    .select('*, profiles(display_name, avatar_url)')
     .order('created_at', { ascending: true })
     .limit(300);
   if (error) {
@@ -493,7 +531,7 @@ function subscribeToMessages() {
   sb.channel('messages-channel')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, async payload => {
       const { data } = await sb.from('messages')
-        .select('*, profiles(display_name)')
+        .select('*, profiles(display_name, avatar_url)')
         .eq('id', payload.new.id)
         .maybeSingle();
       if (data) {
