@@ -1,0 +1,255 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root { color-scheme: dark; }
+
+body {
+  font-family: Tahoma, Arial, sans-serif;
+  background: radial-gradient(circle at top, #1b1640 0%, #0c0a1a 70%);
+  color: #e9e7ff;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.hidden { display: none !important; }
+
+.screen { height: 100vh; display: flex; flex-direction: column; }
+
+/* ---------- الكروت والدخول ---------- */
+#auth-screen, #recovery-screen { align-items: center; justify-content: center; padding: 16px; }
+
+.card {
+  background: rgba(30, 24, 66, 0.92);
+  border: 1px solid #3b3280;
+  padding: 28px 24px;
+  border-radius: 20px;
+  width: min(92vw, 360px);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+h1 { text-align: center; color: #b99cff; font-size: 26px; margin-bottom: 4px; }
+h3 { color: #b99cff; }
+
+.auth-tabs { display: flex; background: #151131; border-radius: 12px; padding: 4px; }
+.auth-tab {
+  flex: 1; background: transparent; color: #8f88c4;
+  padding: 10px; border-radius: 10px;
+}
+.auth-tab.active { background: #7c5cff; color: #fff; }
+
+input, select {
+  background: #151131;
+  border: 1px solid #3b3280;
+  color: #e9e7ff;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-size: 15px;
+  outline: none;
+}
+input:focus { border-color: #ff6ec7; box-shadow: 0 0 0 3px rgba(255, 110, 199, 0.15); }
+
+button {
+  background: #7c5cff;
+  color: #fff;
+  border: none;
+  padding: 11px 16px;
+  border-radius: 12px;
+  font-size: 15px;
+  cursor: pointer;
+  transition: filter 0.15s, transform 0.1s;
+}
+button:hover { filter: brightness(1.12); }
+button:active { transform: scale(0.97); }
+button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.primary {
+  background: linear-gradient(90deg, #7c5cff, #ff6ec7);
+  font-weight: bold;
+}
+.ghost { background: #221c4a; color: #d9d4ff; }
+.danger-btn { background: #ff4f79; }
+.danger { color: #ff7a9a !important; }
+
+.link-btn { background: none; color: #ff8fd0; padding: 4px; font-size: 14px; }
+
+.msg-text { font-size: 14px; min-height: 18px; text-align: center; color: #ff8fa8; }
+.msg-text.ok { color: #6ee7b7; }
+
+/* ---------- الهيدر ---------- */
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 14px;
+  background: rgba(24, 19, 56, 0.95);
+  border-bottom: 1px solid #3b3280;
+}
+.user-label { font-weight: bold; color: #ffd166; }
+.header-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+header > button, .header-btns button { padding: 8px 12px; font-size: 14px; }
+
+.search-bar {
+  display: flex;
+  gap: 8px;
+  padding: 10px 14px;
+  background: #1a1545;
+  border-bottom: 1px solid #3b3280;
+}
+.search-bar input { flex: 1; }
+
+/* ---------- الرسايل ---------- */
+#messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.msg {
+  position: relative;
+  background: #241d52;
+  padding: 10px 36px 10px 12px;
+  border-radius: 16px 16px 16px 4px;
+  max-width: 78%;
+  align-self: flex-start;
+  word-wrap: break-word;
+  border: 1px solid #332b6b;
+}
+.msg.mine {
+  align-self: flex-end;
+  background: linear-gradient(135deg, #5b3fd6, #8d4bd9);
+  border-radius: 16px 16px 4px 16px;
+  padding: 10px 12px 10px 36px;
+}
+
+.meta { font-size: 12px; color: #a9a3d8; margin-bottom: 4px; }
+.msg img, .msg video { max-width: 100%; border-radius: 10px; margin-top: 6px; }
+.msg video { display: block; }
+.msg audio { width: 100%; min-width: 220px; margin-top: 6px; }
+.msg a { color: #ffd166; }
+
+.dots {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  background: transparent;
+  color: #cfc8ff;
+  padding: 2px 6px;
+  font-size: 18px;
+  line-height: 1;
+}
+.msg.mine .dots { left: auto; right: 6px; }
+
+/* ---------- الكومبوزر ---------- */
+.composer {
+  display: flex;
+  gap: 8px;
+  padding: 12px;
+  background: rgba(24, 19, 56, 0.95);
+  border-top: 1px solid #3b3280;
+  align-items: center;
+}
+.composer input { flex: 1; min-width: 0; }
+.composer button { padding: 10px 12px; }
+
+/* ---------- قايمة الثلاث نقط ---------- */
+.msg-menu {
+  position: fixed;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  background: #1f1948;
+  border: 1px solid #3b3280;
+  border-radius: 12px;
+  overflow: hidden;
+  min-width: 130px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+}
+.msg-menu button {
+  background: transparent;
+  color: #e9e7ff;
+  text-align: right;
+  padding: 11px 14px;
+  border-radius: 0;
+}
+.msg-menu button:hover { background: #2d2668; filter: none; }
+
+/* ---------- النوافذ (السجل والكاميرا) ---------- */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 12px;
+}
+.modal-box {
+  background: #1a1545;
+  border: 1px solid #3b3280;
+  width: min(94vw, 460px);
+  max-height: 85vh;
+  border-radius: 18px;
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  gap: 12px;
+}
+.modal-head { display: flex; justify-content: space-between; align-items: center; }
+#cam-video { width: 100%; border-radius: 12px; background: #000; }
+#cam-modal .primary { width: 100%; }
+
+.tabs { display: flex; gap: 6px; }
+.tab { flex: 1; background: #221c4a; color: #a9a3d8; }
+.tab.active { background: linear-gradient(90deg, #7c5cff, #ff6ec7); color: #fff; }
+
+#history-list {
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.hist-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: #241d52;
+  padding: 10px 12px;
+  border-radius: 12px;
+  color: #e9e7ff;
+  text-decoration: none;
+  border: 1px solid #332b6b;
+}
+.hist-item span { font-size: 12px; color: #a9a3d8; }
+.empty { text-align: center; color: #a9a3d8; padding: 20px 0; }
+
+/* ---------- الأدمن ---------- */
+.admin-panel {
+  background: #1a1545;
+  padding: 16px;
+  border-top: 1px solid #3b3280;
+  max-height: 40vh;
+  overflow-y: auto;
+}
+.user-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #3b3280;
+}
+
+/* ---------- الموبايل ---------- */
+@media (max-width: 480px) {
+  header { padding: 10px; }
+  .msg { max-width: 88%; }
+  .composer { gap: 6px; padding: 8px; }
+  .composer button { padding: 10px 8px; }
+}
