@@ -384,3 +384,11 @@ header > button, .header-btns button { padding: 8px 12px; font-size: 14px; white
 
   .modal-box { width: 520px; }
 }
+/* خلفية شاشة الشات: صورة اللوجو */
+#chat-screen {
+  background: linear-gradient(rgba(40, 4, 14, 0.85), rgba(40, 4, 14, 0.85)),
+              url("logo.png") center / cover no-repeat fixed;
+}
+#chat-screen {
+  background: radial-gradient(circle at top, #9e0f2e 0%, #5a0c20 55%, #2a0410 100%);
+}
