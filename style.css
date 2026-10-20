@@ -375,3 +375,27 @@ header > button, .header-btns button { padding: 8px 12px; font-size: 14px; white
 
   .modal-box { width: 520px; }
 }
+/* ---------- زرار إظهار/إخفاء قايمة الهيدر ---------- */
+#menu-toggle {
+  padding: 8px 12px;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.header-extra {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+@media (max-width: 480px) {
+  #menu-toggle { margin-right: auto; }
+  .header-extra { width: 100%; justify-content: center; }
+  .header-extra.collapsed { display: none; }
+  .header-extra button { flex: 1 1 calc(50% - 6px); padding: 8px 10px; font-size: 13px; }
+}
+
+@media (min-width: 481px) {
+  #menu-toggle { display: none; }
+}

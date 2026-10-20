@@ -599,3 +599,8 @@ async function loadUsers() {
     box.appendChild(row);
   });
 }
+// ---------- إظهار/إخفاء قايمة الهيدر على الموبايل ----------
+const menuToggle = $('menu-toggle');
+const headerExtra = $('header-extra');
+headerExtra.classList.add('collapsed');
+menuToggle.onclick = () => headerExtra.classList.toggle('collapsed');
