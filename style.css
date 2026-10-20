@@ -4,8 +4,8 @@
 
 html, body {
   font-family: Tahoma, Arial, sans-serif;
-  background: radial-gradient(circle at top, #e0244f 0%, #9e0f2e 50%, #3d0511 100%) !important;
-  color: #fff5f7;
+  background: #1a1f3d;
+  color: #eef0ff;
   width: 100%;
   max-width: 100%;
   overflow-x: hidden;
@@ -23,26 +23,26 @@ body { height: auto; min-height: 100vh; min-height: 100dvh; overflow: auto; }
   align-items: center;
   justify-content: center;
   padding: 16px;
-  background: radial-gradient(circle at 50% 20%, #e0244f 0%, #9e0f2e 50%, #3d0511 100%) !important;
+  background: radial-gradient(circle at 50% 20%, #2c3a7a 0%, #1a2357 55%, #0d1230 100%) !important;
   overflow-y: auto;
 }
 
 .card {
-  background: linear-gradient(160deg, #b5173f 0%, #7a0c28 60%, #4a0717 100%);
-  border: 1px solid #ff6b8a;
+  background: linear-gradient(160deg, #3b2a8a 0%, #2a1d66 60%, #1c1446 100%);
+  border: 1px solid #7c6cff;
   padding: 28px 24px;
   border-radius: 20px;
   width: min(92vw, 360px);
   display: flex;
   flex-direction: column;
   gap: 12px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.12);
   max-height: 100%;
   overflow-y: auto;
 }
 
 h1 { text-align: center; color: #ffffff; font-size: 26px; margin-bottom: 4px; text-shadow: 0 2px 12px rgba(0, 0, 0, 0.4); }
-h3 { color: #ffd6de; }
+h3 { color: #c9ccff; }
 
 .logo {
   display: block;
@@ -53,17 +53,17 @@ h3 { color: #ffd6de; }
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 
-.auth-tabs { display: flex; background: rgba(40, 4, 14, 0.6); border-radius: 12px; padding: 4px; }
+.auth-tabs { display: flex; background: rgba(10, 8, 40, 0.6); border-radius: 12px; padding: 4px; }
 .auth-tab {
-  flex: 1; background: transparent; color: #ffb3c1;
+  flex: 1; background: transparent; color: #b8bde8;
   padding: 10px; border-radius: 10px;
 }
-.auth-tab.active { background: linear-gradient(90deg, #ff3b5f, #ff6b8a); color: #fff; }
+.auth-tab.active { background: linear-gradient(90deg, #4f6bff, #7c6cff); color: #fff; }
 
 input, select, textarea {
-  background: rgba(40, 4, 14, 0.7);
-  border: 1px solid #ff6b8a;
-  color: #fff5f7;
+  background: rgba(10, 8, 40, 0.7);
+  border: 1px solid #5c6bd1;
+  color: #eef0ff;
   padding: 12px 14px;
   border-radius: 12px;
   font-size: 16px;
@@ -71,12 +71,12 @@ input, select, textarea {
   font-family: inherit;
 }
 input:focus, textarea:focus {
-  border-color: #ffd6de;
-  box-shadow: 0 0 0 3px rgba(255, 107, 138, 0.3);
+  border-color: #9aa7ff;
+  box-shadow: 0 0 0 3px rgba(124, 108, 255, 0.3);
 }
 
 button {
-  background: #e0244f;
+  background: #4f6bff;
   color: #fff;
   border: none;
   padding: 11px 16px;
@@ -89,17 +89,14 @@ button:hover { filter: brightness(1.12); }
 button:active { transform: scale(0.97); }
 button:disabled { opacity: 0.4; cursor: not-allowed; }
 
-.primary {
-  background: linear-gradient(90deg, #e0244f, #ff5b7f);
-  font-weight: bold;
-}
-.ghost { background: #7a0c28; color: #ffd6de; }
-.danger-btn { background: #4a0717; }
+.primary { background: linear-gradient(90deg, #4f6bff, #7c6cff); font-weight: bold; }
+.ghost { background: #2a3366; color: #d7dcff; }
+.danger-btn { background: #7a2040; }
 .danger { color: #ffb3c1 !important; }
 
-.link-btn { background: none; color: #ffd6de; padding: 4px; font-size: 14px; }
+.link-btn { background: none; color: #b8bde8; padding: 4px; font-size: 14px; }
 
-.msg-text { font-size: 14px; min-height: 18px; text-align: center; color: #ffd6de; }
+.msg-text { font-size: 14px; min-height: 18px; text-align: center; color: #c9ccff; }
 .msg-text.ok { color: #6ee7b7; }
 
 /* ---------- الهيدر ---------- */
@@ -110,8 +107,8 @@ header {
   flex-wrap: wrap;
   gap: 8px;
   padding: 12px 14px;
-  background: rgba(122, 12, 40, 0.95);
-  border-bottom: 1px solid #ff6b8a;
+  background: rgba(30, 36, 80, 0.95);
+  border-bottom: 1px solid #5c6bd1;
   position: sticky;
   top: 0;
   z-index: 30;
@@ -141,17 +138,18 @@ header > button, .header-btns button { padding: 8px 12px; font-size: 14px; white
   display: flex;
   gap: 8px;
   padding: 10px 14px;
-  background: #7a0c28;
-  border-bottom: 1px solid #ff6b8a;
+  background: #242c5c;
+  border-bottom: 1px solid #5c6bd1;
 }
 .search-bar input { flex: 1; min-width: 0; }
 
-/* ---------- الشات: الصفحة تتمرر والكومبوزر يفضل ظاهر ---------- */
+/* ---------- الشات ---------- */
 #chat-screen {
   height: auto;
   min-height: 100vh;
   min-height: 100dvh;
   overflow: visible;
+  background: #1a1f3d;
 }
 
 #messages {
@@ -163,27 +161,27 @@ header > button, .header-btns button { padding: 8px 12px; font-size: 14px; white
   flex-direction: column;
   gap: 10px;
   -webkit-overflow-scrolling: touch;
-  background: radial-gradient(circle at top, #9e0f2e 0%, #5a0c20 55%, #2a0410 100%);
+  background: radial-gradient(circle at top, #2c3a7a 0%, #1a2357 55%, #0d1230 100%);
 }
 
 .msg {
   position: relative;
-  background: #5a0c20;
+  background: #2a3366;
   padding: 10px 36px 10px 12px;
   border-radius: 16px 16px 16px 4px;
   max-width: 78%;
   align-self: flex-start;
   word-wrap: break-word;
-  border: 1px solid #a3173a;
+  border: 1px solid #3f4b8f;
 }
 .msg.mine {
   align-self: flex-end;
-  background: linear-gradient(135deg, #e0244f, #9e0f2e);
+  background: linear-gradient(135deg, #4f6bff, #3b2a8a);
   border-radius: 16px 16px 4px 16px;
   padding: 10px 12px 10px 36px;
 }
 
-.meta { font-size: 12px; color: #ffc2cf; margin-bottom: 4px; }
+.meta { font-size: 12px; color: #c9ccff; margin-bottom: 4px; }
 .msg img, .msg video, .msg canvas { max-width: 100%; height: auto; border-radius: 10px; margin-top: 6px; }
 .msg video { display: block; }
 .msg audio { width: 100%; min-width: 220px; margin-top: 6px; }
@@ -194,7 +192,7 @@ header > button, .header-btns button { padding: 8px 12px; font-size: 14px; white
   top: 6px;
   left: 6px;
   background: transparent;
-  color: #ffd6de;
+  color: #d7dcff;
   padding: 2px 6px;
   font-size: 18px;
   line-height: 1;
@@ -206,8 +204,8 @@ header > button, .header-btns button { padding: 8px 12px; font-size: 14px; white
   display: flex;
   gap: 8px;
   padding: 12px;
-  background: rgba(122, 12, 40, 0.95);
-  border-top: 1px solid #ff6b8a;
+  background: rgba(30, 36, 80, 0.95);
+  border-top: 1px solid #5c6bd1;
   align-items: center;
   flex-wrap: nowrap;
   position: sticky;
@@ -224,8 +222,8 @@ header > button, .header-btns button { padding: 8px 12px; font-size: 14px; white
   z-index: 50;
   display: flex;
   flex-direction: column;
-  background: #5a0c20;
-  border: 1px solid #a3173a;
+  background: #2a3366;
+  border: 1px solid #5c6bd1;
   border-radius: 12px;
   overflow: hidden;
   min-width: 130px;
@@ -233,14 +231,14 @@ header > button, .header-btns button { padding: 8px 12px; font-size: 14px; white
 }
 .msg-menu button {
   background: transparent;
-  color: #fff5f7;
+  color: #eef0ff;
   text-align: right;
   padding: 11px 14px;
   border-radius: 0;
 }
-.msg-menu button:hover { background: #7a0c28; filter: none; }
+.msg-menu button:hover { background: #3a4580; filter: none; }
 
-/* ---------- النوافذ (السجل والكاميرا والتواصل) ---------- */
+/* ---------- النوافذ ---------- */
 .modal {
   position: fixed;
   inset: 0;
@@ -252,8 +250,8 @@ header > button, .header-btns button { padding: 8px 12px; font-size: 14px; white
   padding: 10px;
 }
 .modal-box {
-  background: #5a0c20;
-  border: 1px solid #a3173a;
+  background: #242c5c;
+  border: 1px solid #5c6bd1;
   width: min(94vw, 460px);
   max-height: 88dvh;
   border-radius: 18px;
@@ -268,54 +266,45 @@ header > button, .header-btns button { padding: 8px 12px; font-size: 14px; white
 #cam-modal .primary { width: 100%; }
 
 .tabs { display: flex; gap: 6px; }
-.tab { flex: 1; background: #7a0c28; color: #ffc2cf; }
-.tab.active { background: linear-gradient(90deg, #e0244f, #ff5b7f); color: #fff; }
+.tab { flex: 1; background: #2a3366; color: #c9ccff; }
+.tab.active { background: linear-gradient(90deg, #4f6bff, #7c6cff); color: #fff; }
 
-#history-list {
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
+#history-list { overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
 .hist-item {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  background: #7a0c28;
+  background: #2a3366;
   padding: 10px 12px;
   border-radius: 12px;
-  color: #fff5f7;
+  color: #eef0ff;
   text-decoration: none;
-  border: 1px solid #a3173a;
+  border: 1px solid #3f4b8f;
 }
-.hist-item span { font-size: 12px; color: #ffc2cf; }
-.empty { text-align: center; color: #ffc2cf; padding: 20px 0; }
+.hist-item span { font-size: 12px; color: #c9ccff; }
+.empty { text-align: center; color: #c9ccff; padding: 20px 0; }
 
 /* ---------- التواصل والشكاوي ---------- */
-.contact-box p { font-size: 15px; color: #ffe0e8; }
+.contact-box p { font-size: 15px; color: #dde1ff; }
 .contact-box .contact-line { font-size: 16px; font-weight: bold; color: #ffffff; direction: ltr; text-align: right; }
 .contact-box input { width: 100%; }
-.contact-box textarea {
-  min-height: 90px;
-  resize: vertical;
-  width: 100%;
-}
+.contact-box textarea { min-height: 90px; resize: vertical; width: 100%; }
 
 /* ---------- الفوتر ---------- */
 .credits {
   text-align: center;
   font-size: 12px;
-  color: #ffc2cf;
+  color: #c9ccff;
   padding: 6px;
-  background: rgba(40, 4, 14, 0.7);
+  background: rgba(10, 8, 40, 0.7);
 }
 .credits b { color: #ffffff; }
 
 /* ---------- الأدمن ---------- */
 .admin-panel {
-  background: #5a0c20;
+  background: #242c5c;
   padding: 16px;
-  border-top: 1px solid #a3173a;
+  border-top: 1px solid #5c6bd1;
   max-height: 45dvh;
   overflow-y: auto;
 }
@@ -324,7 +313,7 @@ header > button, .header-btns button { padding: 8px 12px; font-size: 14px; white
   justify-content: space-between;
   align-items: center;
   padding: 8px 0;
-  border-bottom: 1px solid #a3173a;
+  border-bottom: 1px solid #3f4b8f;
 }
 
 /* ---------- الموبايل (لحد 480px) ---------- */
