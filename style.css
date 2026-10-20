@@ -4,7 +4,7 @@
 
 body {
   font-family: Tahoma, Arial, sans-serif;
-  background: radial-gradient(circle at top, #dc143c 0%, #6b0a1f 60%, #2a0410 100%);
+  background: radial-gradient(circle at top, #7b3fe4 0%, #4b1a9e 50%, #1e0a3f 100%);
   color: #fff5f7;
   height: 100vh;
   overflow: hidden;
@@ -14,22 +14,27 @@ body {
 
 .screen { height: 100vh; display: flex; flex-direction: column; }
 
-/* ---------- الكروت والدخول ---------- */
-#auth-screen, #recovery-screen { align-items: center; justify-content: center; padding: 16px; }
+/* ---------- شاشة الدخول ---------- */
+#auth-screen, #recovery-screen {
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: radial-gradient(circle at 50% 20%, #7b3fe4 0%, #4b1a9e 45%, #1e0a3f 100%);
+}
 
 .card {
-  background: rgba(60, 8, 22, 0.92);
-  border: 1px solid #a3173a;
+  background: linear-gradient(160deg, #6a2bd6 0%, #4b1a9e 55%, #2e0f66 100%);
+  border: 1px solid #b388ff;
   padding: 28px 24px;
   border-radius: 20px;
   width: min(92vw, 360px);
   display: flex;
   flex-direction: column;
   gap: 12px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 20px 60px rgba(60, 10, 120, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
-h1 { text-align: center; color: #ffb3c1; font-size: 26px; margin-bottom: 4px; }
+h1 { text-align: center; color: #ffffff; font-size: 26px; margin-bottom: 4px; text-shadow: 0 2px 12px rgba(255, 110, 199, 0.5); }
 h3 { color: #ffb3c1; }
 
 .logo {
@@ -41,16 +46,16 @@ h3 { color: #ffb3c1; }
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 
-.auth-tabs { display: flex; background: #2a0410; border-radius: 12px; padding: 4px; }
+.auth-tabs { display: flex; background: rgba(20, 8, 50, 0.6); border-radius: 12px; padding: 4px; }
 .auth-tab {
-  flex: 1; background: transparent; color: #d98a9b;
+  flex: 1; background: transparent; color: #d9c7ff;
   padding: 10px; border-radius: 10px;
 }
 .auth-tab.active { background: linear-gradient(90deg, #dc143c, #ff4d6d); color: #fff; }
 
 input, select {
-  background: #2a0410;
-  border: 1px solid #a3173a;
+  background: rgba(20, 8, 50, 0.7);
+  border: 1px solid #8f5cff;
   color: #fff5f7;
   padding: 12px 14px;
   border-radius: 12px;
@@ -58,8 +63,8 @@ input, select {
   outline: none;
 }
 input:focus {
-  border-color: #ff4d6d;
-  box-shadow: 0 0 0 3px rgba(220, 20, 60, 0.25);
+  border-color: #ff7ad9;
+  box-shadow: 0 0 0 3px rgba(255, 122, 217, 0.25);
 }
 
 button {
@@ -222,98 +227,4 @@ header > button, .header-btns button { padding: 8px 12px; font-size: 14px; }
 }
 .modal-box {
   background: #3a0816;
-  border: 1px solid #7a1a33;
-  width: min(94vw, 460px);
-  max-height: 85vh;
-  border-radius: 18px;
-  display: flex;
-  flex-direction: column;
-  padding: 16px;
-  gap: 12px;
-}
-.modal-head { display: flex; justify-content: space-between; align-items: center; }
-#cam-video { width: 100%; border-radius: 12px; background: #000; }
-#cam-modal .primary { width: 100%; }
-
-.tabs { display: flex; gap: 6px; }
-.tab { flex: 1; background: #4a0d1f; color: #e8a5b3; }
-.tab.active { background: linear-gradient(90deg, #dc143c, #ff4d6d); color: #fff; }
-
-#history-list {
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.hist-item {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  background: #4a0d1f;
-  padding: 10px 12px;
-  border-radius: 12px;
-  color: #fff5f7;
-  text-decoration: none;
-  border: 1px solid #7a1a33;
-}
-.hist-item span { font-size: 12px; color: #e8a5b3; }
-.empty { text-align: center; color: #e8a5b3; padding: 20px 0; }
-
-/* ---------- الأدمن ---------- */
-.admin-panel {
-  background: #3a0816;
-  padding: 16px;
-  border-top: 1px solid #7a1a33;
-  max-height: 40vh;
-  overflow-y: auto;
-}
-.user-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 0;
-  border-bottom: 1px solid #7a1a33;
-}
-
-/* ---------- الموبايل ---------- */
-@media (max-width: 480px) {
-  header { padding: 10px; }
-  .msg { max-width: 88%; }
-  .composer { gap: 6px; padding: 8px; }
-  .composer button { padding: 10px 8px; }
-}
-/* كارت الدخول بخلفية بنفسجي */
-#auth-screen .card,
-#recovery-screen .card {
-  background: linear-gradient(160deg, #6a2bd6 0%, #4b1a9e 55%, #2e0f66 100%);
-  border: 1px solid #b388ff;
-  box-shadow: 0 20px 60px rgba(60, 10, 120, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.15);
-}
-
-#auth-screen .auth-tabs,
-#recovery-screen .auth-tabs {
-  background: rgba(20, 8, 50, 0.6);
-}
-
-#auth-screen input,
-#recovery-screen input {
-  background: rgba(20, 8, 50, 0.7);
-  border: 1px solid #8f5cff;
-}
-
-#auth-screen input:focus,
-#recovery-screen input:focus {
-  border-color: #ff7ad9;
-  box-shadow: 0 0 0 3px rgba(255, 122, 217, 0.25);
-}
-
-#auth-screen h1,
-#recovery-screen h1 {
-  color: #ffffff;
-  text-shadow: 0 2px 12px rgba(255, 110, 199, 0.5);
-}
-/* خلفية شاشة الدخول كلها */
-#auth-screen,
-#recovery-screen {
-  background: radial-gradient(circle at 50% 20%, #7b3fe4 0%, #4b1a9e 45%, #1e0a3f 100%);
-}
+  border:
