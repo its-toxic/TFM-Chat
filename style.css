@@ -374,3 +374,36 @@ header > button, .header-btns button { padding: 8px 12px; font-size: 14px; white
 
   .modal-box { width: 520px; }
 }
+/* ---------- شاشة الدخول: خلفية زرقاء بنفسجية غامقة + كارت أحمر قرمزي دموي ---------- */
+html, body {
+  background: #161436 !important;
+}
+
+#auth-screen,
+#recovery-screen {
+  background: radial-gradient(circle at 50% 20%, #2b2a6e 0%, #1c1a4a 55%, #0c0b22 100%) !important;
+}
+
+#auth-screen .card,
+#recovery-screen .card {
+  background: linear-gradient(160deg, #9b0f26 0%, #6e0819 60%, #3f0410 100%) !important;
+  border: 1px solid #d6304f;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+#auth-screen input,
+#recovery-screen input {
+  background: rgba(40, 2, 10, 0.75);
+  border: 1px solid #c4283f;
+}
+
+#auth-screen .auth-tabs,
+#recovery-screen .auth-tabs {
+  background: rgba(30, 2, 8, 0.7);
+}
+
+#auth-screen .auth-tab.active,
+#auth-screen .primary,
+#recovery-screen .primary {
+  background: linear-gradient(90deg, #c4283f, #e0344f);
+}
