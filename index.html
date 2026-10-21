@@ -27,6 +27,27 @@
         <button class="auth-tab active" data-mode="login" data-i18n="login">دخول</button>
         <button class="auth-tab" data-mode="signup" data-i18n="signup">حساب جديد</button>
       </div>
+
+      <!-- اختيار الشعبة والمستوى قبل الدخول -->
+      <div class="room-picker">
+        <div>
+          <label data-i18n="track">الشعبة</label>
+          <select id="track-select">
+            <option value="ar" data-i18n="trkAr">عربي</option>
+            <option value="en" data-i18n="trkEn">انجليزي</option>
+          </select>
+        </div>
+        <div>
+          <label data-i18n="level">المستوى</label>
+          <select id="level-select">
+            <option value="1" data-i18n="lvl1">الأول</option>
+            <option value="2" data-i18n="lvl2">الثاني</option>
+            <option value="3" data-i18n="lvl3">الثالث</option>
+            <option value="4" data-i18n="lvl4">الرابع</option>
+          </select>
+        </div>
+      </div>
+
       <input id="email" type="email" data-i18n-ph="email" dir="ltr">
       <input id="password" type="password" data-i18n-ph="password" dir="ltr">
       <p class="hint" data-i18n="pwRule"></p>

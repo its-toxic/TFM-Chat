@@ -41,6 +41,9 @@ const T = {
     noProfile: 'مفيش بروفايل للحساب ده',
     kick: 'طرد', unkick: 'فك الطرد',
     kickedMsg: 'تم طرد حسابك من المنصة. كلّم الأدمن',
+    track: 'الشعبة', level: 'المستوى',
+    trkAr: 'عربي', trkEn: 'انجليزي',
+    lvl1: 'الأول', lvl2: 'الثاني', lvl3: 'الثالث', lvl4: 'الرابع',
     createdBy: 'Created by', designedBy: 'Designed by',
     toggleLang: 'English', toLight: '☀️ وضع نهار', toDark: '🌙 وضع ليلي'
   },
@@ -79,6 +82,9 @@ const T = {
     noProfile: 'No profile found for this account',
     kick: 'Kick', unkick: 'Unkick',
     kickedMsg: 'Your account was removed from the platform. Contact the admin',
+    track: 'Track', level: 'Level',
+    trkAr: 'Arabic', trkEn: 'English',
+    lvl1: '1st', lvl2: '2nd', lvl3: '3rd', lvl4: '4th',
     createdBy: 'Created by', designedBy: 'Designed by',
     toggleLang: 'عربي', toLight: '☀️ Day mode', toDark: '🌙 Night mode'
   }
@@ -117,6 +123,50 @@ function toggleTheme() {
 
 document.querySelectorAll('.lang-toggle').forEach(b => { b.onclick = toggleLang; });
 document.querySelectorAll('.theme-toggle').forEach(b => { b.onclick = toggleTheme; });
+
+// ---------- الشعبة والمستوى (بيتختاروا قبل الدخول) ----------
+const TRACKS = ['ar', 'en'];
+const LEVELS = [1, 2, 3, 4];
+
+function readRoom() {
+  let tr = 'ar';
+  let lv = 1;
+  try {
+    const savedTrack = localStorage.getItem('track');
+    const savedLevel = Number(localStorage.getItem('level'));
+    if (TRACKS.includes(savedTrack)) tr = savedTrack;
+    if (LEVELS.includes(savedLevel)) lv = savedLevel;
+  } catch {}
+  return { track: tr, level: lv };
+}
+
+let { track, level } = readRoom();
+
+function currentRoom() {
+  return `${track}-${level}`;
+}
+
+function saveRoom() {
+  try {
+    localStorage.setItem('track', track);
+    localStorage.setItem('level', String(level));
+  } catch {}
+}
+
+function applyRoomUI() {
+  $('track-select').value = track;
+  $('level-select').value = String(level);
+}
+
+$('track-select').onchange = () => {
+  track = $('track-select').value;
+  saveRoom();
+};
+
+$('level-select').onchange = () => {
+  level = Number($('level-select').value);
+  saveRoom();
+};
 
 // ---------- متغيرات ----------
 let currentProfile = null;
@@ -614,6 +664,7 @@ function removeMessageEl(id) {
 async function loadMessages() {
   const { data, error } = await sb.from('messages')
     .select('*, profiles(display_name, avatar_url)')
+    .eq('room', currentRoom())
     .order('created_at', { ascending: true })
     .limit(300);
   if (error) {
@@ -635,7 +686,8 @@ async function sendMessage(fileUrl = null, fileType = null) {
     user_id: currentProfile.id,
     content: content || null,
     file_url: fileUrl,
-    file_type: fileType
+    file_type: fileType,
+    room: currentRoom()
   });
   if (error) return alert(t('sendFail') + error.message);
   $('msg-input').value = '';
@@ -862,6 +914,9 @@ function subscribeToMessages() {
 
   sb.channel('messages-channel')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, async payload => {
+      // نعرض بس الرسايل اللي في الشعبة والمستوى اللي اخترته
+      if (payload.new.room !== currentRoom()) return;
+
       const { data } = await sb.from('messages')
         .select('*, profiles(display_name, avatar_url)')
         .eq('id', payload.new.id)
@@ -924,5 +979,6 @@ async function loadUsers() {
 }
 
 // ---------- بدء التطبيق ----------
+applyRoomUI();
 applyBg();
 applyI18n();

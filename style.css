@@ -167,6 +167,23 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
 }
 .google-btn:hover { background: #f7f8f8; filter: none; }
 
+/* اختيار الشعبة والمستوى (شاشة الدخول) */
+.room-picker {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  background: var(--input-bg);
+  border-radius: 12px;
+  padding: 10px;
+}
+.room-picker label {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.room-picker select { width: 100%; padding: 10px 10px; font-size: 15px; }
+
 .hint { font-size: 12px; color: var(--muted); text-align: center; line-height: 1.6; }
 
 .signup-box {
