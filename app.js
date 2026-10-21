@@ -4,6 +4,113 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const CONTACT_EMAIL = 'its.toxic0807@gmail.com';
 
+// ---------- الترجمة ----------
+const T = {
+  ar: {
+    login: 'دخول', signup: 'حساب جديد', createAccount: 'إنشاء حساب',
+    email: 'الإيميل', password: 'الباسورد', newPassword: 'الباسورد الجديد',
+    pwRule: 'الباسورد 8 حروف على الأقل، فيه حرف كبير وحرف صغير ورقم ورمز (مثال: Ab12@xyz)',
+    chooseAvatarSignup: 'لازم تختار صورة بروفايل عشان تعمل الحساب',
+    chooseAvatar: 'لازم تختار صورة بروفايل قبل ما تدخل',
+    save: 'حفظ', forgot: 'نسيت كلمة السر؟', contact: 'التواصل والشكاوي',
+    settings: 'الإعدادات', changeAvatar: 'تغيير صورة البروفايل', changeName: 'تغيير اسم المستخدم',
+    history: 'السجل', admin: 'لوحة الأدمن', search: 'بحث', logout: 'تسجيل خروج',
+    searchPh: 'ابحث في الرسايل...', msgPh: 'اكتب رسالة...', send: 'إرسال',
+    emailPwReq: 'اكتب الإيميل والباسورد', emailReq: 'اكتب إيميلك الأول',
+    pwInvalid: 'الباسورد لازم يكون 8 حروف على الأقل، وفيه حرف كبير وصغير ورقم ورمز',
+    avatarReq: 'اختار صورة بروفايل الأول',
+    checkEmail: 'اتعمل الحساب. اتأكد من إيميلك أو سجّل دخول',
+    loginFail: 'الإيميل أو الباسورد غلط', exists: 'الإيميل ده متسجل قبل كده',
+    resetSent: 'بعتنالك لينك تغيير الباسورد على الإيميل', pwChanged: 'تم تغيير الباسورد',
+    recTitle: 'باسورد جديد', recSave: 'حفظ الباسورد',
+    nameAsk: 'اكتب الاسم الجديد:', nameFail: 'فشل التغيير: ',
+    avatarFail: 'فشل رفع الصورة: ', avatarSaved: 'تم حفظ صورة البروفايل',
+    deleteAsk: 'تمسح الرسالة دي؟', deleteFail: 'فشل المسح: ', sendFail: 'فشل الإرسال: ',
+    uploadFail: 'فشل الرفع: ', loadFail: 'فشل تحميل الرسايل: ',
+    camFail: 'ما قدرتش أفتح الكاميرا: ', micFail: 'ما قدرتش أفتح الميكروفون: ',
+    copyFail: 'ما قدرتش أنسخ الرسالة', copy: 'نسخ', delete: 'مسح',
+    noRows: 'مفيش حاجة هنا لسه', tabLinks: 'روابط', tabDocs: 'ملفات', tabMedia: 'ميديا',
+    image: 'صورة', audio: 'صوت', video: 'فيديو', file: 'ملف',
+    camera: 'الكاميرا', shoot: 'تصوير وإرسال',
+    contactTitle: 'التواصل والشكاوي', contactInfo: 'للتواصل أو تقديم الشكاوي:',
+    emailLabel: 'الإيميل:', contactPh: 'اكتب شكواك أو رسالتك هنا...', contactBtn: 'إرسال عن طريق الإيميل',
+    contactSubject: 'TFM Chat - تواصل وشكوى',
+    roles: 'إدارة الأدوار', userDefault: 'مستخدم', profileFail: 'خطأ في تحميل البروفايل',
+    noProfile: 'مفيش بروفايل للحساب ده',
+    createdBy: 'Created by', designedBy: 'Designed by',
+    toggleLang: 'English', toLight: '☀️ فاتح', toDark: '🌙 داكن'
+  },
+  en: {
+    login: 'Login', signup: 'Sign up', createAccount: 'Create account',
+    email: 'Email', password: 'Password', newPassword: 'New password',
+    pwRule: 'At least 8 characters, with uppercase, lowercase, a number and a symbol (example: Ab12@xyz)',
+    chooseAvatarSignup: 'You must choose a profile picture to create your account',
+    chooseAvatar: 'You must choose a profile picture before entering',
+    save: 'Save', forgot: 'Forgot password?', contact: 'Contact & complaints',
+    settings: 'Settings', changeAvatar: 'Change profile picture', changeName: 'Change display name',
+    history: 'History', admin: 'Admin panel', search: 'Search', logout: 'Log out',
+    searchPh: 'Search messages...', msgPh: 'Write a message...', send: 'Send',
+    emailPwReq: 'Enter email and password', emailReq: 'Enter your email first',
+    pwInvalid: 'Password must be at least 8 characters with uppercase, lowercase, a number and a symbol',
+    avatarReq: 'Choose a profile picture first',
+    checkEmail: 'Account created. Check your email or log in',
+    loginFail: 'Wrong email or password', exists: 'This email is already registered',
+    resetSent: 'We sent a password reset link to your email', pwChanged: 'Password changed',
+    recTitle: 'New password', recSave: 'Save password',
+    nameAsk: 'Enter the new name:', nameFail: 'Failed: ',
+    avatarFail: 'Image upload failed: ', avatarSaved: 'Profile picture saved',
+    deleteAsk: 'Delete this message?', deleteFail: 'Delete failed: ', sendFail: 'Send failed: ',
+    uploadFail: 'Upload failed: ', loadFail: 'Failed to load messages: ',
+    camFail: 'Could not open camera: ', micFail: 'Could not open microphone: ',
+    copyFail: 'Could not copy the message', copy: 'Copy', delete: 'Delete',
+    noRows: 'Nothing here yet', tabLinks: 'Links', tabDocs: 'Documents', tabMedia: 'Media',
+    image: 'Image', audio: 'Audio', video: 'Video', file: 'File',
+    camera: 'Camera', shoot: 'Capture & send',
+    contactTitle: 'Contact & complaints', contactInfo: 'For contact or complaints:',
+    emailLabel: 'Email:', contactPh: 'Write your complaint or message here...', contactBtn: 'Send by email',
+    contactSubject: 'TFM Chat - Contact & Complaint',
+    roles: 'Role management', userDefault: 'User', profileFail: 'Failed to load profile',
+    noProfile: 'No profile found for this account',
+    createdBy: 'Created by', designedBy: 'Designed by',
+    toggleLang: 'عربي', toLight: '☀️ Light', toDark: '🌙 Dark'
+  }
+};
+
+let lang = localStorage.getItem('lang') || 'ar';
+let theme = localStorage.getItem('theme') || 'dark';
+
+function t(k) { return (T[lang] && T[lang][k]) || k; }
+
+function applyI18n() {
+  document.documentElement.lang = lang;
+  document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+  document.documentElement.dataset.theme = theme;
+
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
+  document.querySelectorAll('.lang-toggle').forEach(b => { b.textContent = t('toggleLang'); });
+  document.querySelectorAll('.theme-toggle').forEach(b => { b.textContent = theme === 'dark' ? t('toLight') : t('toDark'); });
+
+  setAuthMode(authMode);
+  if (currentProfile) refreshUserLabel();
+}
+
+function toggleLang() {
+  lang = lang === 'ar' ? 'en' : 'ar';
+  localStorage.setItem('lang', lang);
+  applyI18n();
+}
+
+function toggleTheme() {
+  theme = theme === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('theme', theme);
+  applyI18n();
+}
+
+document.querySelectorAll('.lang-toggle').forEach(b => { b.onclick = toggleLang; });
+document.querySelectorAll('.theme-toggle').forEach(b => { b.onclick = toggleTheme; });
+
+// ---------- متغيرات ----------
 let currentProfile = null;
 let subscribed = false;
 let msgById = new Map();
@@ -11,12 +118,14 @@ let menuMsgId = null;
 let activeTab = 'links';
 let authMode = 'login';
 let recovering = false;
+let signingUp = false;
 let camStream = null;
 let recorder = null;
 let chunks = [];
 
 const $ = id => document.getElementById(id);
 
+// ---------- مساعدات ----------
 function esc(s) {
   return String(s ?? '')
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -35,11 +144,15 @@ function setMsg(id, text, isErr = true) {
 }
 
 function translateError(msg) {
-  if (!msg) return 'حصل خطأ';
-  if (msg.includes('Invalid login')) return 'الإيميل أو الباسورد غلط';
-  if (msg.includes('already registered')) return 'الإيميل ده متسجل قبل كده';
-  if (msg.includes('Password should')) return 'الباسورد لازم يكون 6 حروف أو أكتر';
+  if (!msg) return t('loginFail');
+  if (msg.includes('Invalid login')) return t('loginFail');
+  if (msg.includes('already registered')) return t('exists');
+  if (msg.includes('Password should')) return t('pwInvalid');
   return msg;
+}
+
+function validPassword(p) {
+  return p.length >= 8 && /[a-z]/.test(p) && /[A-Z]/.test(p) && /\d/.test(p) && /[^A-Za-z0-9]/.test(p);
 }
 
 function scrollBottom() {
@@ -47,8 +160,8 @@ function scrollBottom() {
   el.scrollTop = el.scrollHeight;
 }
 
-function isMediaType(t) {
-  return !!t && (t.startsWith('image/') || t.startsWith('video/') || t.startsWith('audio/'));
+function isMediaType(tp) {
+  return !!tp && (tp.startsWith('image/') || tp.startsWith('video/') || tp.startsWith('audio/'));
 }
 
 function extractLinks(text) {
@@ -56,34 +169,53 @@ function extractLinks(text) {
 }
 
 function fileName(url) {
-  try {
-    return decodeURIComponent(url.split('/').pop().split('?')[0]);
-  } catch {
-    return 'file';
-  }
+  try { return decodeURIComponent(url.split('/').pop().split('?')[0]); }
+  catch { return 'file'; }
 }
 
-// ---------- زرار القايمة على الموبايل ----------
-$('menu-toggle').onclick = () => $('header-extra').classList.toggle('collapsed');
-$('header-extra').classList.add('collapsed');
+function refreshUserLabel() {
+  if (!currentProfile) return;
+  const name = currentProfile.display_name || t('userDefault');
+  $('user-label').textContent = `${name} (${currentProfile.role})`;
+}
+
+async function uploadAvatar(file, userId) {
+  const ext = (file.name.split('.').pop() || 'jpg').replace(/[^\w]/g, '');
+  const path = `${userId}/avatar_${Date.now()}.${ext}`;
+  const { error } = await sb.storage.from('uploads').upload(path, file, { contentType: file.type });
+  if (error) throw new Error(error.message);
+  const { data } = sb.storage.from('uploads').getPublicUrl(path);
+  const { error: e2 } = await sb.from('profiles').update({ avatar_url: data.publicUrl }).eq('id', userId);
+  if (e2) throw new Error(e2.message);
+  return data.publicUrl;
+}
 
 // ---------- شاشة الدخول ----------
-document.querySelectorAll('.auth-tab').forEach(t => {
-  t.onclick = () => setAuthMode(t.dataset.mode);
+document.querySelectorAll('.auth-tab').forEach(tb => {
+  tb.onclick = () => setAuthMode(tb.dataset.mode);
 });
 
 function setAuthMode(mode) {
   authMode = mode;
-  document.querySelectorAll('.auth-tab').forEach(t => t.classList.toggle('active', t.dataset.mode === mode));
-  $('auth-submit').textContent = mode === 'login' ? 'دخول' : 'إنشاء حساب';
+  document.querySelectorAll('.auth-tab').forEach(tb => tb.classList.toggle('active', tb.dataset.mode === mode));
+  $('auth-submit').textContent = mode === 'login' ? t('login') : t('createAccount');
   $('forgot-btn').classList.toggle('hidden', mode !== 'login');
+  $('signup-box').classList.toggle('hidden', mode !== 'signup');
   setMsg('auth-msg', '');
 }
+
+$('signup-avatar-input').onchange = () => {
+  const file = $('signup-avatar-input').files[0];
+  if (!file) return;
+  const pv = $('signup-preview');
+  pv.src = URL.createObjectURL(file);
+  pv.classList.remove('hidden');
+};
 
 $('auth-submit').onclick = async () => {
   const email = $('email').value.trim();
   const password = $('password').value;
-  if (!email || !password) return setMsg('auth-msg', 'اكتب الإيميل والباسورد');
+  if (!email || !password) return setMsg('auth-msg', t('emailPwReq'));
 
   if (authMode === 'login') {
     const { error } = await sb.auth.signInWithPassword({ email, password });
@@ -91,13 +223,30 @@ $('auth-submit').onclick = async () => {
     return;
   }
 
-  if (password.length < 6) return setMsg('auth-msg', 'الباسورد لازم يكون 6 حروف أو أكتر');
-  const { data, error } = await sb.auth.signUp({ email, password });
-  if (error) return setMsg('auth-msg', translateError(error.message));
-  if (data.session) return;
+  // إنشاء حساب
+  if (!validPassword(password)) return setMsg('auth-msg', t('pwInvalid'));
+  const file = $('signup-avatar-input').files[0];
+  if (!file) return setMsg('auth-msg', t('avatarReq'));
 
-  setAuthMode('login');
-  setMsg('auth-msg', 'الحساب اتعمل، سجّل دخول دلوقتي', false);
+  signingUp = true;
+  const { data, error } = await sb.auth.signUp({ email, password });
+  if (error) {
+    signingUp = false;
+    return setMsg('auth-msg', translateError(error.message));
+  }
+  if (!data.session) {
+    signingUp = false;
+    setAuthMode('login');
+    return setMsg('auth-msg', t('checkEmail'), false);
+  }
+  try {
+    await uploadAvatar(file, data.user.id);
+  } catch (e) {
+    signingUp = false;
+    return setMsg('auth-msg', t('avatarFail') + e.message);
+  }
+  signingUp = false;
+  await enterChat(data.user.id);
 };
 
 $('password').addEventListener('keydown', e => {
@@ -106,34 +255,32 @@ $('password').addEventListener('keydown', e => {
 
 $('forgot-btn').onclick = async () => {
   const email = $('email').value.trim();
-  if (!email) return setMsg('auth-msg', 'اكتب إيميلك الأول');
+  if (!email) return setMsg('auth-msg', t('emailReq'));
   const redirectTo = window.location.origin + window.location.pathname;
   const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo });
   if (error) setMsg('auth-msg', error.message);
-  else setMsg('auth-msg', 'بعتنالك لينك تغيير الباسورد على الإيميل', false);
+  else setMsg('auth-msg', t('resetSent'), false);
 };
 
-// ---------- التواصل والشكاوي ----------
+// ---------- التواصل ----------
 $('contact-open').onclick = () => $('contact-modal').classList.remove('hidden');
 $('contact-close').onclick = () => $('contact-modal').classList.add('hidden');
-
 $('contact-send').onclick = () => {
   const text = $('contact-msg').value.trim();
-  const subject = encodeURIComponent('TFM Chat - تواصل وشكوى');
-  const body = encodeURIComponent(text || '');
+  const subject = encodeURIComponent(t('contactSubject'));
+  const body = encodeURIComponent(text);
   window.location.href = `mailto:${CONTACT_EMAIL}?subject=${subject}&body=${body}`;
 };
 
 // ---------- تغيير الباسورد بعد اللينك ----------
 $('recovery-btn').onclick = async () => {
   const pw = $('new-password').value;
-  if (pw.length < 6) return setMsg('rec-msg', 'الباسورد لازم يكون 6 حروف أو أكتر');
+  if (!validPassword(pw)) return setMsg('rec-msg', t('pwInvalid'));
   const { error } = await sb.auth.updateUser({ password: pw });
   if (error) return setMsg('rec-msg', error.message);
-
   recovering = false;
   $('new-password').value = '';
-  alert('تم تغيير الباسورد');
+  alert(t('pwChanged'));
   const { data } = await sb.auth.getSession();
   if (data.session) await enterChat(data.session.user.id);
   else showScreen('auth-screen');
@@ -146,79 +293,58 @@ sb.auth.onAuthStateChange(async (event, session) => {
     showScreen('recovery-screen');
     return;
   }
-  if (recovering) return;
-
+  if (recovering || signingUp) return;
   if (session) {
     await enterChat(session.user.id);
   } else {
     currentProfile = null;
+    $('avatar-gate').classList.add('hidden');
     showScreen('auth-screen');
   }
 });
 
-$('logout-btn').onclick = () => sb.auth.signOut();
-
 async function enterChat(userId) {
   const ok = await loadProfile(userId);
   if (!ok) return;
+
+  if (!currentProfile.avatar_url) {
+    showScreen('auth-screen');
+    $('avatar-gate').classList.remove('hidden');
+    return;
+  }
+
+  $('avatar-gate').classList.add('hidden');
   showScreen('chat-screen');
   await loadMessages();
   subscribeToMessages();
 }
 
-// ---------- تغيير الاسم ----------
-$('name-btn').onclick = async () => {
-  if (!currentProfile) return;
-  const name = prompt('اكتب الاسم الجديد:', currentProfile.display_name || '');
-  if (!name || !name.trim()) return;
-  const { error } = await sb.from('profiles')
-    .update({ display_name: name.trim() })
-    .eq('id', currentProfile.id);
-  if (error) return alert('فشل التغيير: ' + error.message);
-  await loadProfile(currentProfile.id);
-  await loadMessages();
+// بوابة صورة البروفايل للحسابات اللي مفيهاش صورة
+$('gate-save').onclick = async () => {
+  const file = $('gate-input').files[0];
+  if (!file) return setMsg('gate-msg', t('avatarReq'));
+  try {
+    await uploadAvatar(file, currentProfile.id);
+  } catch (e) {
+    return setMsg('gate-msg', t('avatarFail') + e.message);
+  }
+  await enterChat(currentProfile.id);
 };
 
-// ---------- صورة البروفايل ----------
-$('avatar-btn').onclick = () => $('avatar-input').click();
-
-$('avatar-input').onchange = async () => {
-  const file = $('avatar-input').files[0];
-  if (!file || !currentProfile) return;
-
-  const ext = (file.name.split('.').pop() || 'jpg').replace(/[^\w]/g, '');
-  const path = `${currentProfile.id}/avatar_${Date.now()}.${ext}`;
-  const { error } = await sb.storage.from('uploads').upload(path, file, {
-    contentType: file.type, upsert: true
-  });
-  if (error) return alert('فشل رفع الصورة: ' + error.message);
-
-  const { data } = sb.storage.from('uploads').getPublicUrl(path);
-  const { error: upErr } = await sb.from('profiles')
-    .update({ avatar_url: data.publicUrl })
-    .eq('id', currentProfile.id);
-  if (upErr) return alert('فشل الحفظ: ' + upErr.message);
-
-  await loadProfile(currentProfile.id);
-  await loadMessages();
-  $('avatar-input').value = '';
-};
+$('logout-btn') && null;
 
 // ---------- البروفايل ----------
 async function loadProfile(userId) {
-  const { data, error } = await sb.from('profiles')
-    .select('*').eq('id', userId).maybeSingle();
-
+  const { data, error } = await sb.from('profiles').select('*').eq('id', userId).maybeSingle();
   if (error || !data) {
-    setMsg('auth-msg', error ? 'خطأ في تحميل البروفايل' : 'مفيش بروفايل للحساب ده');
+    setMsg('auth-msg', error ? t('profileFail') : t('noProfile'));
     await sb.auth.signOut();
     return false;
   }
 
   currentProfile = data;
   const canWrite = data.role === 'admin' || data.role === 'sender';
-
-  $('user-label').textContent = `${data.display_name || 'مستخدم'} (${data.role})`;
+  refreshUserLabel();
 
   const av = $('my-avatar');
   if (data.avatar_url) {
@@ -228,7 +354,6 @@ async function loadProfile(userId) {
     av.hidden = true;
   }
 
-  $('admin-toggle').classList.toggle('hidden', data.role !== 'admin');
   $('msg-input').disabled = !canWrite;
   $('send-btn').disabled = !canWrite;
   $('attach-btn').disabled = !canWrite;
@@ -236,6 +361,66 @@ async function loadProfile(userId) {
   $('mic-btn').disabled = !canWrite;
   return true;
 }
+
+// ---------- الإعدادات ----------
+$('settings-btn').onclick = () => {
+  $('set-admin').classList.toggle('hidden', !(currentProfile && currentProfile.role === 'admin'));
+  $('settings-modal').classList.remove('hidden');
+};
+$('settings-close').onclick = () => $('settings-modal').classList.add('hidden');
+
+$('set-avatar').onclick = () => {
+  $('settings-modal').classList.add('hidden');
+  $('avatar-input').click();
+};
+
+$('avatar-input').onchange = async () => {
+  const file = $('avatar-input').files[0];
+  if (!file || !currentProfile) return;
+  try {
+    await uploadAvatar(file, currentProfile.id);
+    await loadProfile(currentProfile.id);
+    await loadMessages();
+    alert(t('avatarSaved'));
+  } catch (e) {
+    alert(t('avatarFail') + e.message);
+  }
+  $('avatar-input').value = '';
+};
+
+$('set-name').onclick = async () => {
+  $('settings-modal').classList.add('hidden');
+  if (!currentProfile) return;
+  const name = prompt(t('nameAsk'), currentProfile.display_name || '');
+  if (!name || !name.trim()) return;
+  const { error } = await sb.from('profiles').update({ display_name: name.trim() }).eq('id', currentProfile.id);
+  if (error) return alert(t('nameFail') + error.message);
+  await loadProfile(currentProfile.id);
+  await loadMessages();
+};
+
+$('set-history').onclick = () => {
+  $('settings-modal').classList.add('hidden');
+  $('history-modal').classList.remove('hidden');
+  renderHistory();
+};
+
+$('set-admin').onclick = async () => {
+  $('settings-modal').classList.add('hidden');
+  $('admin-modal').classList.remove('hidden');
+  await loadUsers();
+};
+$('admin-close').onclick = () => $('admin-modal').classList.add('hidden');
+
+$('set-search').onclick = () => {
+  $('settings-modal').classList.add('hidden');
+  openSearch();
+};
+
+$('set-logout').onclick = () => {
+  $('settings-modal').classList.add('hidden');
+  sb.auth.signOut();
+};
 
 // ---------- الرسايل ----------
 function renderMessage(m) {
@@ -249,18 +434,19 @@ function renderMessage(m) {
   const avatar = m.profiles?.avatar_url
     ? `<img class="msg-avatar" src="${esc(m.profiles.avatar_url)}" alt="">`
     : '';
+  const time = new Date(m.created_at).toLocaleTimeString(lang === 'ar' ? 'ar-EG' : 'en-US');
 
   let html = `<button class="dots" data-id="${m.id}">⋮</button>`;
-  html += `<div class="meta">${avatar}${esc(m.profiles?.display_name || '?')} · ${new Date(m.created_at).toLocaleTimeString('ar-EG')}</div>`;
+  html += `<div class="meta">${avatar}${esc(m.profiles?.display_name || '?')} · ${time}</div>`;
   if (m.content) html += `<div>${esc(m.content)}</div>`;
 
   if (m.file_url) {
-    const t = m.file_type || '';
-    if (t.startsWith('image/')) {
+    const tp = m.file_type || '';
+    if (tp.startsWith('image/')) {
       html += `<img src="${esc(m.file_url)}" alt="">`;
-    } else if (t.startsWith('video/')) {
+    } else if (tp.startsWith('video/')) {
       html += `<video src="${esc(m.file_url)}" controls playsinline></video>`;
-    } else if (t.startsWith('audio/')) {
+    } else if (tp.startsWith('audio/')) {
       html += `<audio src="${esc(m.file_url)}" controls preload="metadata"></audio>`;
     } else {
       html += `<a href="${esc(m.file_url)}" target="_blank">📄 ${esc(fileName(m.file_url))}</a>`;
@@ -283,7 +469,7 @@ async function loadMessages() {
     .order('created_at', { ascending: true })
     .limit(300);
   if (error) {
-    alert('فشل تحميل الرسايل: ' + error.message);
+    alert(t('loadFail') + error.message);
     return;
   }
   $('messages').innerHTML = '';
@@ -303,10 +489,7 @@ async function sendMessage(fileUrl = null, fileType = null) {
     file_url: fileUrl,
     file_type: fileType
   });
-  if (error) {
-    alert('فشل الإرسال: ' + error.message);
-    return;
-  }
+  if (error) return alert(t('sendFail') + error.message);
   $('msg-input').value = '';
 }
 
@@ -324,12 +507,8 @@ $('file-input').onchange = async () => {
 
   const safeName = file.name.replace(/[^\w.\-]/g, '_');
   const path = `${currentProfile.id}/${Date.now()}_${safeName}`;
-
   const { error } = await sb.storage.from('uploads').upload(path, file, { contentType: file.type });
-  if (error) {
-    alert('فشل الرفع: ' + error.message);
-    return;
-  }
+  if (error) return alert(t('uploadFail') + error.message);
 
   const { data } = sb.storage.from('uploads').getPublicUrl(path);
   await sendMessage(data.publicUrl, file.type);
@@ -343,12 +522,12 @@ async function openCamera() {
     $('cam-video').srcObject = camStream;
     $('cam-modal').classList.remove('hidden');
   } catch (err) {
-    alert('ما قدرتش أفتح الكاميرا: ' + err.message);
+    alert(t('camFail') + err.message);
   }
 }
 
 function closeCamera() {
-  if (camStream) camStream.getTracks().forEach(t => t.stop());
+  if (camStream) camStream.getTracks().forEach(tr => tr.stop());
   camStream = null;
   $('cam-video').srcObject = null;
   $('cam-modal').classList.add('hidden');
@@ -368,7 +547,7 @@ $('cam-snap').onclick = () => {
     if (!blob || !currentProfile) return;
     const path = `${currentProfile.id}/${Date.now()}_photo.jpg`;
     const { error } = await sb.storage.from('uploads').upload(path, blob, { contentType: 'image/jpeg' });
-    if (error) return alert('فشل الرفع: ' + error.message);
+    if (error) return alert(t('uploadFail') + error.message);
     const { data } = sb.storage.from('uploads').getPublicUrl(path);
     await sendMessage(data.publicUrl, 'image/jpeg');
     closeCamera();
@@ -388,20 +567,20 @@ $('mic-btn').onclick = async () => {
     chunks = [];
     recorder.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
     recorder.onstop = async () => {
-      stream.getTracks().forEach(t => t.stop());
+      stream.getTracks().forEach(tr => tr.stop());
       const type = recorder.mimeType || 'audio/webm';
       const ext = type.includes('mp4') ? 'mp4' : 'webm';
       const blob = new Blob(chunks, { type });
       const path = `${currentProfile.id}/${Date.now()}_voice.${ext}`;
       const { error } = await sb.storage.from('uploads').upload(path, blob, { contentType: type });
-      if (error) return alert('فشل رفع الصوت: ' + error.message);
+      if (error) return alert(t('uploadFail') + error.message);
       const { data } = sb.storage.from('uploads').getPublicUrl(path);
       await sendMessage(data.publicUrl, type);
     };
     recorder.start();
     $('mic-btn').textContent = '⏹️';
   } catch (err) {
-    alert('ما قدرتش أفتح الميكروفون: ' + err.message);
+    alert(t('micFail') + err.message);
   }
 };
 
@@ -413,7 +592,7 @@ $('messages').addEventListener('click', e => {
 
   menuMsgId = Number(btn.dataset.id);
   const m = msgById.get(menuMsgId);
-  const canDelete = currentProfile &&
+  const canDelete = currentProfile && m &&
     (m.user_id === currentProfile.id || currentProfile.role === 'admin');
   $('menu-delete').classList.toggle('hidden', !canDelete);
 
@@ -434,7 +613,7 @@ $('menu-copy').onclick = async () => {
   try {
     await navigator.clipboard.writeText(m.content || m.file_url || '');
   } catch {
-    alert('ما قدرتش أنسخ الرسالة');
+    alert(t('copyFail'));
   }
 };
 
@@ -449,12 +628,9 @@ $('menu-delete').onclick = () => {
 };
 
 async function deleteMessage(id) {
-  if (!confirm('تمسح الرسالة دي؟')) return;
+  if (!confirm(t('deleteAsk'))) return;
   const { error } = await sb.from('messages').delete().eq('id', id);
-  if (error) {
-    alert('فشل المسح: ' + error.message);
-    return;
-  }
+  if (error) return alert(t('deleteFail') + error.message);
   removeMessageEl(id);
 }
 
@@ -477,24 +653,17 @@ function filterMessages(q) {
   });
 }
 
-$('search-btn').onclick = () => {
-  $('search-bar').classList.contains('hidden') ? openSearch() : closeSearch();
-};
 $('search-close').onclick = closeSearch;
 $('search-input').addEventListener('input', e => filterMessages(e.target.value));
 
 // ---------- السجل ----------
-$('history-btn').onclick = () => {
-  $('history-modal').classList.remove('hidden');
-  renderHistory();
-};
 $('history-close').onclick = () => $('history-modal').classList.add('hidden');
 
-document.querySelectorAll('.tab').forEach(t => {
-  t.onclick = () => {
+document.querySelectorAll('.tab').forEach(tb => {
+  tb.onclick = () => {
     document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
-    t.classList.add('active');
-    activeTab = t.dataset.tab;
+    tb.classList.add('active');
+    activeTab = tb.dataset.tab;
     renderHistory();
   };
 });
@@ -513,20 +682,18 @@ function renderHistory() {
     } else if (activeTab === 'docs') {
       if (m.file_url && !isMediaType(m.file_type))
         items.push({ title: '📄 ' + fileName(m.file_url), url: m.file_url, who, date });
-    } else {
-      if (m.file_url && isMediaType(m.file_type)) {
-        const t = m.file_type;
-        const title = t.startsWith('image/') ? '🖼️ Image'
-                    : t.startsWith('audio/') ? '🎙️ Audio' : '🎬 Video';
-        items.push({ title, url: m.file_url, who, date });
-      }
+    } else if (m.file_url && isMediaType(m.file_type)) {
+      const tp = m.file_type;
+      const title = tp.startsWith('image/') ? '🖼️ ' + t('image')
+                  : tp.startsWith('audio/') ? '🎙️ ' + t('audio') : '🎬 ' + t('video');
+      items.push({ title, url: m.file_url, who, date });
     }
   }
 
   items.sort((a, b) => b.date - a.date);
 
   if (!items.length) {
-    list.innerHTML = '<p class="empty">Nothing here yet</p>';
+    list.innerHTML = `<p class="empty">${t('noRows')}</p>`;
     return;
   }
 
@@ -535,12 +702,12 @@ function renderHistory() {
     a.href = it.url;
     a.target = '_blank';
     a.className = 'hist-item';
-    a.innerHTML = `<b>${esc(it.title)}</b><span>${esc(it.who)} · ${it.date.toLocaleString('ar-EG')}</span>`;
+    a.innerHTML = `<b>${esc(it.title)}</b><span>${esc(it.who)} · ${it.date.toLocaleString(lang === 'ar' ? 'ar-EG' : 'en-US')}</span>`;
     list.appendChild(a);
   });
 }
 
-// ---------- الوقت الفعلي (إضافة + مسح) ----------
+// ---------- الوقت الفعلي ----------
 function subscribeToMessages() {
   if (subscribed) return;
   subscribed = true;
@@ -563,18 +730,9 @@ function subscribeToMessages() {
 }
 
 // ---------- لوحة الأدمن ----------
-$('admin-toggle').onclick = async () => {
-  const panel = $('admin-panel');
-  panel.classList.toggle('hidden');
-  if (!panel.classList.contains('hidden')) await loadUsers();
-};
-
 async function loadUsers() {
   const { data, error } = await sb.from('profiles').select('*').order('created_at');
-  if (error) {
-    alert(error.message);
-    return;
-  }
+  if (error) return alert(error.message);
 
   const box = $('users-list');
   box.innerHTML = '';
@@ -603,3 +761,6 @@ async function loadUsers() {
     box.appendChild(row);
   });
 }
+
+// ---------- بدء التطبيق ----------
+applyI18n();

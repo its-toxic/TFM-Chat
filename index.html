@@ -8,53 +8,61 @@
 </head>
 <body>
 
+  <!-- أزرار اللغة والثيم (شاشة الدخول) -->
+  <div class="top-tools" id="auth-tools">
+    <button class="ghost small lang-toggle"></button>
+    <button class="ghost small theme-toggle"></button>
+  </div>
+
+  <!-- شاشة الدخول وإنشاء الحساب -->
   <div id="auth-screen" class="screen">
     <div class="card">
       <img src="logo.png" alt="TFM" class="logo">
       <h1>TFM Chat</h1>
       <div class="auth-tabs">
-        <button class="auth-tab active" data-mode="login">دخول</button>
-        <button class="auth-tab" data-mode="signup">حساب جديد</button>
+        <button class="auth-tab active" data-mode="login" data-i18n="login">دخول</button>
+        <button class="auth-tab" data-mode="signup" data-i18n="signup">حساب جديد</button>
       </div>
-      <input id="email" type="email" placeholder="الإيميل" dir="ltr">
-      <input id="password" type="password" placeholder="الباسورد" dir="ltr">
-      <button id="auth-submit" class="primary">دخول</button>
-      <button id="forgot-btn" class="link-btn">نسيت كلمة السر؟</button>
-      <button id="contact-open" class="ghost">التواصل والشكاوي</button>
+      <input id="email" type="email" data-i18n-ph="email" dir="ltr">
+      <input id="password" type="password" data-i18n-ph="password" dir="ltr">
+      <p class="hint" data-i18n="pwRule"></p>
+
+      <div id="signup-box" class="signup-box hidden">
+        <p class="hint" data-i18n="chooseAvatarSignup"></p>
+        <img id="signup-preview" class="preview hidden" alt="">
+        <input id="signup-avatar-input" type="file" accept="image/*">
+      </div>
+
+      <button id="auth-submit" class="primary"></button>
+      <button id="forgot-btn" class="link-btn" data-i18n="forgot"></button>
+      <button id="contact-open" class="ghost" data-i18n="contact"></button>
       <p id="auth-msg" class="msg-text"></p>
     </div>
   </div>
 
+  <!-- شاشة تغيير الباسورد بعد اللينك -->
   <div id="recovery-screen" class="screen hidden">
     <div class="card">
-      <h1>باسورد جديد</h1>
-      <input id="new-password" type="password" placeholder="الباسورد الجديد" dir="ltr">
-      <button id="recovery-btn" class="primary">حفظ الباسورد</button>
+      <h1 data-i18n="recTitle"></h1>
+      <p class="hint" data-i18n="pwRule"></p>
+      <input id="new-password" type="password" data-i18n-ph="newPassword" dir="ltr">
+      <button id="recovery-btn" class="primary" data-i18n="recSave"></button>
       <p id="rec-msg" class="msg-text"></p>
     </div>
   </div>
 
+  <!-- شاشة الشات -->
   <div id="chat-screen" class="screen hidden">
     <header>
       <div class="user-box">
         <img id="my-avatar" class="avatar" src="" alt="" hidden>
         <span id="user-label" class="user-label"></span>
       </div>
-      <button id="menu-toggle" class="ghost">☰</button>
-      <div id="header-extra" class="header-extra">
-        <button id="avatar-btn" class="ghost">تغيير الصورة</button>
-        <button id="name-btn" class="ghost">تغيير الاسم</button>
-        <div class="header-btns">
-          <button id="search-btn" class="ghost">Search</button>
-          <button id="history-btn" class="ghost">History</button>
-          <button id="admin-toggle" class="ghost hidden">لوحة الأدمن</button>
-          <button id="logout-btn" class="danger-btn">خروج</button>
-        </div>
-      </div>
+      <button id="settings-btn" class="ghost gear" title="⚙️">⚙️</button>
     </header>
 
     <div id="search-bar" class="search-bar hidden">
-      <input id="search-input" placeholder="ابحث في الرسايل..." dir="auto">
+      <input id="search-input" data-i18n-ph="searchPh" dir="auto">
       <button id="search-close" class="ghost">✕</button>
     </div>
 
@@ -62,66 +70,110 @@
 
     <div class="composer">
       <input id="file-input" type="file" accept="image/*,video/*,application/pdf" hidden>
-      <button id="attach-btn" class="ghost" title="إرفاق ملف">📎</button>
-      <button id="cam-btn" class="ghost" title="كاميرا">📷</button>
-      <button id="mic-btn" class="ghost" title="تسجيل صوت">🎙️</button>
-      <input id="msg-input" placeholder="اكتب رسالة...">
-      <button id="send-btn" class="primary">إرسال</button>
+      <button id="attach-btn" class="ghost" title="📎">📎</button>
+      <button id="cam-btn" class="ghost" title="📷">📷</button>
+      <button id="mic-btn" class="ghost" title="🎙️">🎙️</button>
+      <input id="msg-input" data-i18n-ph="msgPh">
+      <button id="send-btn" class="primary" data-i18n="send"></button>
     </div>
 
-    <div class="credits">Created by <b>Ahmed</b> &nbsp;|&nbsp; Designed by <b>Ahmed</b></div>
+    <div class="credits">
+      <span data-i18n="createdBy"></span> <b>Ahmed</b> &nbsp;|&nbsp; <span data-i18n="designedBy"></span> <b>Ahmed</b>
+    </div>
+  </div>
 
-    <div id="admin-panel" class="admin-panel hidden">
-      <h3>إدارة الأدوار</h3>
+  <!-- قايمة الإعدادات -->
+  <div id="settings-modal" class="modal hidden">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h3 data-i18n="settings"></h3>
+        <button id="settings-close" class="ghost">✕</button>
+      </div>
+      <div class="set-list">
+        <button id="set-avatar" class="set-item" data-i18n="changeAvatar"></button>
+        <button id="set-name" class="set-item" data-i18n="changeName"></button>
+        <button id="set-history" class="set-item" data-i18n="history"></button>
+        <button id="set-admin" class="set-item hidden" data-i18n="admin"></button>
+        <button id="set-search" class="set-item" data-i18n="search"></button>
+        <button id="set-logout" class="set-item danger-btn" data-i18n="logout"></button>
+      </div>
+      <div class="set-row">
+        <button class="ghost lang-toggle"></button>
+        <button class="ghost theme-toggle"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- لوحة الأدمن -->
+  <div id="admin-modal" class="modal hidden">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h3 data-i18n="roles"></h3>
+        <button id="admin-close" class="ghost">✕</button>
+      </div>
       <div id="users-list"></div>
     </div>
   </div>
 
-  <div id="msg-menu" class="msg-menu hidden">
-    <button id="menu-copy">نسخ</button>
-    <button id="menu-search">بحث</button>
-    <button id="menu-delete" class="danger">مسح</button>
+  <!-- بوابة صورة البروفايل (لا يمكن إغلاقها إلا بالحفظ) -->
+  <div id="avatar-gate" class="modal hidden">
+    <div class="modal-box">
+      <h3 data-i18n="chooseAvatar"></h3>
+      <input id="gate-input" type="file" accept="image/*">
+      <button id="gate-save" class="primary" data-i18n="save"></button>
+      <p id="gate-msg" class="msg-text"></p>
+    </div>
   </div>
 
+  <!-- قايمة الثلاث نقط للرسالة -->
+  <div id="msg-menu" class="msg-menu hidden">
+    <button id="menu-copy" data-i18n="copy"></button>
+    <button id="menu-search" data-i18n="search"></button>
+    <button id="menu-delete" class="danger" data-i18n="delete"></button>
+  </div>
+
+  <!-- السجل -->
   <div id="history-modal" class="modal hidden">
     <div class="modal-box">
       <div class="modal-head">
-        <h3>History</h3>
+        <h3 data-i18n="history"></h3>
         <button id="history-close" class="ghost">✕</button>
       </div>
       <div class="tabs">
-        <button class="tab active" data-tab="links">Links</button>
-        <button class="tab" data-tab="docs">Documents</button>
-        <button class="tab" data-tab="media">Media</button>
+        <button class="tab active" data-tab="links" data-i18n="tabLinks"></button>
+        <button class="tab" data-tab="docs" data-i18n="tabDocs"></button>
+        <button class="tab" data-tab="media" data-i18n="tabMedia"></button>
       </div>
       <div id="history-list"></div>
     </div>
   </div>
 
+  <!-- الكاميرا -->
   <div id="cam-modal" class="modal hidden">
     <div class="modal-box">
       <div class="modal-head">
-        <h3>Camera</h3>
+        <h3 data-i18n="camera"></h3>
         <button id="cam-close" class="ghost">✕</button>
       </div>
       <video id="cam-video" autoplay playsinline></video>
       <canvas id="cam-canvas" hidden></canvas>
-      <button id="cam-snap" class="primary">تصوير وإرسال</button>
+      <button id="cam-snap" class="primary" data-i18n="shoot"></button>
     </div>
   </div>
 
+  <!-- التواصل والشكاوي -->
   <div id="contact-modal" class="modal hidden">
     <div class="modal-box contact-box">
       <div class="modal-head">
-        <h3>التواصل والشكاوي</h3>
+        <h3 data-i18n="contactTitle"></h3>
         <button id="contact-close" class="ghost">✕</button>
       </div>
-      <p>للتواصل أو تقديم الشكاوي:</p>
+      <p data-i18n="contactInfo"></p>
       <p class="contact-line">📞 010-325-12602</p>
-      <p>الإيميل:</p>
+      <p data-i18n="emailLabel"></p>
       <p class="contact-line">its.toxic0807@gmail.com</p>
-      <textarea id="contact-msg" placeholder="اكتب شكواك أو رسالتك هنا..."></textarea>
-      <button id="contact-send" class="primary">إرسال عن طريق الإيميل</button>
+      <textarea id="contact-msg" data-i18n-ph="contactPh"></textarea>
+      <button id="contact-send" class="primary" data-i18n="contactBtn"></button>
     </div>
   </div>
 
