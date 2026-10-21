@@ -39,6 +39,8 @@ const T = {
     contactSubject: 'TFM Chat - تواصل وشكوى',
     roles: 'إدارة الأدوار', userDefault: 'مستخدم', profileFail: 'خطأ في تحميل البروفايل',
     noProfile: 'مفيش بروفايل للحساب ده',
+    kick: 'طرد', unkick: 'فك الطرد',
+    kickedMsg: 'تم طرد حسابك من المنصة. كلّم الأدمن',
     createdBy: 'Created by', designedBy: 'Designed by',
     toggleLang: 'English', toLight: '☀️ وضع نهار', toDark: '🌙 وضع ليلي'
   },
@@ -75,6 +77,8 @@ const T = {
     contactSubject: 'TFM Chat - Contact & Complaint',
     roles: 'Role management', userDefault: 'User', profileFail: 'Failed to load profile',
     noProfile: 'No profile found for this account',
+    kick: 'Kick', unkick: 'Unkick',
+    kickedMsg: 'Your account was removed from the platform. Contact the admin',
     createdBy: 'Created by', designedBy: 'Designed by',
     toggleLang: 'عربي', toLight: '☀️ Day mode', toDark: '🌙 Night mode'
   }
@@ -126,6 +130,8 @@ let signingUp = false;
 let camStream = null;
 let recorder = null;
 let chunks = [];
+let kickChannel = null;
+let kickUserId = null;
 
 const $ = id => document.getElementById(id);
 
@@ -322,6 +328,8 @@ async function enterChat(userId) {
   const ok = await loadProfile(userId);
   if (!ok) return;
 
+  watchKick(currentProfile.id);
+
   if (!currentProfile.avatar_url) {
     showScreen('auth-screen');
     $('avatar-gate').classList.remove('hidden');
@@ -357,6 +365,12 @@ async function loadProfile(userId) {
     return false;
   }
 
+  if (data.is_banned) {
+    setMsg('auth-msg', t('kickedMsg'));
+    await sb.auth.signOut();
+    return false;
+  }
+
   currentProfile = data;
   const canWrite = data.role === 'admin' || data.role === 'sender';
   refreshUserLabel();
@@ -375,6 +389,27 @@ async function loadProfile(userId) {
   $('cam-btn').disabled = !canWrite;
   $('mic-btn').disabled = !canWrite;
   return true;
+}
+
+// ---------- الطرد الفوري ----------
+function watchKick(userId) {
+  if (kickUserId === userId) return;
+  kickUserId = userId;
+  if (kickChannel) sb.removeChannel(kickChannel);
+
+  kickChannel = sb.channel('kick-' + userId)
+    .on('postgres_changes', {
+      event: 'UPDATE',
+      schema: 'public',
+      table: 'profiles',
+      filter: `id=eq.${userId}`
+    }, payload => {
+      if (payload.new.is_banned) {
+        alert(t('kickedMsg'));
+        sb.auth.signOut();
+      }
+    })
+    .subscribe();
 }
 
 // ---------- الإعدادات ----------
@@ -853,7 +888,7 @@ async function loadUsers() {
   data.forEach(p => {
     const row = document.createElement('div');
     row.className = 'user-row';
-    row.innerHTML = `<span>${esc(p.display_name || p.id.slice(0, 8))}</span>`;
+    row.innerHTML = `<span>${esc(p.display_name || p.id.slice(0, 8))}${p.is_banned ? ' 🚫' : ''}</span>`;
 
     const sel = document.createElement('select');
     ['admin', 'sender', 'viewer'].forEach(r => {
@@ -871,6 +906,19 @@ async function loadUsers() {
     };
 
     row.appendChild(sel);
+
+    if (!currentProfile || p.id !== currentProfile.id) {
+      const kb = document.createElement('button');
+      kb.textContent = p.is_banned ? t('unkick') : t('kick');
+      kb.className = p.is_banned ? 'ghost' : 'danger-btn';
+      kb.onclick = async () => {
+        const { error } = await sb.from('profiles').update({ is_banned: !p.is_banned }).eq('id', p.id);
+        if (error) alert(error.message);
+        else await loadUsers();
+      };
+      row.appendChild(kb);
+    }
+
     box.appendChild(row);
   });
 }
