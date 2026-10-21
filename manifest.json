@@ -1,0 +1,25 @@
+{
+  "name": "TFM Chat",
+  "short_name": "TFM",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#161436",
+  "theme_color": "#6e0819",
+  "lang": "ar",
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
