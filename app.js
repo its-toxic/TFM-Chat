@@ -14,6 +14,8 @@ const T = {
     chooseAvatar: 'لازم تختار صورة بروفايل قبل ما تدخل',
     save: 'حفظ', forgot: 'نسيت كلمة السر؟', google: 'تسجيل الدخول بجوجل', contact: 'التواصل والشكاوي',
     settings: 'الإعدادات', changeAvatar: 'تغيير صورة البروفايل', changeName: 'تغيير اسم المستخدم',
+    changeBg: 'تغيير خلفية الشات', chatBg: 'خلفية الشات', uploadBg: 'رفع صورة من جهازي',
+    resetBg: 'رجّع الخلفية الافتراضية', bgFail: 'فشل حفظ الخلفية: ',
     history: 'السجل', admin: 'لوحة الأدمن', search: 'بحث', logout: 'تسجيل خروج',
     searchPh: 'ابحث في الرسايل...', msgPh: 'اكتب رسالة...', send: 'إرسال',
     emailPwReq: 'اكتب الإيميل والباسورد', emailReq: 'اكتب إيميلك الأول',
@@ -38,7 +40,7 @@ const T = {
     roles: 'إدارة الأدوار', userDefault: 'مستخدم', profileFail: 'خطأ في تحميل البروفايل',
     noProfile: 'مفيش بروفايل للحساب ده',
     createdBy: 'Created by', designedBy: 'Designed by',
-    toggleLang: 'English', toLight: '☀️ فاتح', toDark: '🌙 داكن'
+    toggleLang: 'English', toLight: '☀️ وضع نهار', toDark: '🌙 وضع ليلي'
   },
   en: {
     login: 'Login', signup: 'Sign up', createAccount: 'Create account',
@@ -48,6 +50,8 @@ const T = {
     chooseAvatar: 'You must choose a profile picture before entering',
     save: 'Save', forgot: 'Forgot password?', google: 'Continue with Google', contact: 'Contact & complaints',
     settings: 'Settings', changeAvatar: 'Change profile picture', changeName: 'Change display name',
+    changeBg: 'Change chat background', chatBg: 'Chat background', uploadBg: 'Upload image from my device',
+    resetBg: 'Restore default background', bgFail: 'Failed to save background: ',
     history: 'History', admin: 'Admin panel', search: 'Search', logout: 'Log out',
     searchPh: 'Search messages...', msgPh: 'Write a message...', send: 'Send',
     emailPwReq: 'Enter email and password', emailReq: 'Enter your email first',
@@ -72,7 +76,7 @@ const T = {
     roles: 'Role management', userDefault: 'User', profileFail: 'Failed to load profile',
     noProfile: 'No profile found for this account',
     createdBy: 'Created by', designedBy: 'Designed by',
-    toggleLang: 'عربي', toLight: '☀️ Light', toDark: '🌙 Dark'
+    toggleLang: 'عربي', toLight: '☀️ Day mode', toDark: '🌙 Night mode'
   }
 };
 
@@ -433,6 +437,104 @@ $('set-logout').onclick = () => {
   sb.auth.signOut();
 };
 
+// ---------- خلفية الشات ----------
+const BG_PRESETS = [
+  'linear-gradient(135deg, #3f0410, #161436)',
+  'linear-gradient(135deg, #1c1a4a, #0c0b22)',
+  'linear-gradient(135deg, #0f3d33, #0c0b22)',
+  'linear-gradient(135deg, #5a0a1c, #2b2a6e)',
+  'linear-gradient(135deg, #ffd0db, #ffb3c4)',
+  '#ffffff'
+];
+
+function readBg() {
+  try { return localStorage.getItem('chatBg'); } catch { return null; }
+}
+
+function applyBg() {
+  const el = $('messages');
+  const val = readBg();
+  if (val && val.startsWith('img:')) {
+    el.style.background = '';
+    el.style.backgroundImage = `url("${val.slice(4)}")`;
+    el.style.backgroundSize = 'cover';
+    el.style.backgroundPosition = 'center';
+  } else if (val) {
+    el.style.background = val;
+  } else {
+    el.style.background = '';
+  }
+}
+
+function saveBg(value) {
+  try {
+    localStorage.setItem('chatBg', value);
+  } catch (e) {
+    alert(t('bgFail') + e.message);
+    return false;
+  }
+  applyBg();
+  return true;
+}
+
+function renderBgSwatches() {
+  const box = $('bg-swatches');
+  if (box.childElementCount) return;
+  box.style.cssText = 'display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px;';
+  BG_PRESETS.forEach(bg => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.style.cssText = `height:52px;padding:0;border:1px solid var(--border);border-radius:10px;background:${bg};`;
+    b.onclick = () => {
+      if (saveBg(bg)) $('bg-modal').classList.add('hidden');
+    };
+    box.appendChild(b);
+  });
+}
+
+async function shrinkImage(file, maxW) {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = new Image();
+    img.src = url;
+    await img.decode();
+    const scale = Math.min(1, maxW / img.width);
+    const c = document.createElement('canvas');
+    c.width = Math.round(img.width * scale);
+    c.height = Math.round(img.height * scale);
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    return c.toDataURL('image/jpeg', 0.8);
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+$('set-bg').onclick = () => {
+  $('settings-modal').classList.add('hidden');
+  renderBgSwatches();
+  $('bg-modal').classList.remove('hidden');
+};
+$('bg-close').onclick = () => $('bg-modal').classList.add('hidden');
+$('bg-upload').onclick = () => $('bg-input').click();
+
+$('bg-reset').onclick = () => {
+  try { localStorage.removeItem('chatBg'); } catch {}
+  applyBg();
+  $('bg-modal').classList.add('hidden');
+};
+
+$('bg-input').onchange = async () => {
+  const file = $('bg-input').files[0];
+  if (!file) return;
+  try {
+    const dataUrl = await shrinkImage(file, 1280);
+    if (saveBg('img:' + dataUrl)) $('bg-modal').classList.add('hidden');
+  } catch (e) {
+    alert(t('bgFail') + e.message);
+  }
+  $('bg-input').value = '';
+};
+
 // ---------- الرسايل ----------
 function renderMessage(m) {
   msgById.set(m.id, m);
@@ -457,321 +559,4 @@ function renderMessage(m) {
       html += `<img src="${esc(m.file_url)}" alt="">`;
     } else if (tp.startsWith('video/')) {
       html += `<video src="${esc(m.file_url)}" controls playsinline></video>`;
-    } else if (tp.startsWith('audio/')) {
-      html += `<audio src="${esc(m.file_url)}" controls preload="metadata"></audio>`;
-    } else {
-      html += `<a href="${esc(m.file_url)}" target="_blank">📄 ${esc(fileName(m.file_url))}</a>`;
-    }
-  }
-
-  div.innerHTML = html;
-  $('messages').appendChild(div);
-}
-
-function removeMessageEl(id) {
-  const el = document.querySelector(`.msg[data-id="${id}"]`);
-  if (el) el.remove();
-  msgById.delete(id);
-}
-
-async function loadMessages() {
-  const { data, error } = await sb.from('messages')
-    .select('*, profiles(display_name, avatar_url)')
-    .order('created_at', { ascending: true })
-    .limit(300);
-  if (error) {
-    alert(t('loadFail') + error.message);
-    return;
-  }
-  $('messages').innerHTML = '';
-  msgById = new Map();
-  data.forEach(renderMessage);
-  scrollBottom();
-}
-
-async function sendMessage(fileUrl = null, fileType = null) {
-  if (!currentProfile) return;
-  const content = $('msg-input').value.trim();
-  if (!content && !fileUrl) return;
-
-  const { error } = await sb.from('messages').insert({
-    user_id: currentProfile.id,
-    content: content || null,
-    file_url: fileUrl,
-    file_type: fileType
-  });
-  if (error) return alert(t('sendFail') + error.message);
-  $('msg-input').value = '';
-}
-
-$('send-btn').onclick = () => sendMessage();
-$('msg-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter') sendMessage();
-});
-
-// ---------- رفع الملفات ----------
-$('attach-btn').onclick = () => $('file-input').click();
-
-$('file-input').onchange = async () => {
-  const file = $('file-input').files[0];
-  if (!file || !currentProfile) return;
-
-  const safeName = file.name.replace(/[^\w.\-]/g, '_');
-  const path = `${currentProfile.id}/${Date.now()}_${safeName}`;
-  const { error } = await sb.storage.from('uploads').upload(path, file, { contentType: file.type });
-  if (error) return alert(t('uploadFail') + error.message);
-
-  const { data } = sb.storage.from('uploads').getPublicUrl(path);
-  await sendMessage(data.publicUrl, file.type);
-  $('file-input').value = '';
-};
-
-// ---------- الكاميرا ----------
-async function openCamera() {
-  try {
-    camStream = await navigator.mediaDevices.getUserMedia({ video: true });
-    $('cam-video').srcObject = camStream;
-    $('cam-modal').classList.remove('hidden');
-  } catch (err) {
-    alert(t('camFail') + err.message);
-  }
-}
-
-function closeCamera() {
-  if (camStream) camStream.getTracks().forEach(tr => tr.stop());
-  camStream = null;
-  $('cam-video').srcObject = null;
-  $('cam-modal').classList.add('hidden');
-}
-
-$('cam-btn').onclick = openCamera;
-$('cam-close').onclick = closeCamera;
-
-$('cam-snap').onclick = () => {
-  const video = $('cam-video');
-  const canvas = $('cam-canvas');
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  canvas.getContext('2d').drawImage(video, 0, 0);
-
-  canvas.toBlob(async blob => {
-    if (!blob || !currentProfile) return;
-    const path = `${currentProfile.id}/${Date.now()}_photo.jpg`;
-    const { error } = await sb.storage.from('uploads').upload(path, blob, { contentType: 'image/jpeg' });
-    if (error) return alert(t('uploadFail') + error.message);
-    const { data } = sb.storage.from('uploads').getPublicUrl(path);
-    await sendMessage(data.publicUrl, 'image/jpeg');
-    closeCamera();
-  }, 'image/jpeg', 0.9);
-};
-
-// ---------- الميكروفون ----------
-$('mic-btn').onclick = async () => {
-  if (recorder && recorder.state === 'recording') {
-    recorder.stop();
-    $('mic-btn').textContent = '🎙️';
-    return;
-  }
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    recorder = new MediaRecorder(stream);
-    chunks = [];
-    recorder.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
-    recorder.onstop = async () => {
-      stream.getTracks().forEach(tr => tr.stop());
-      const type = recorder.mimeType || 'audio/webm';
-      const ext = type.includes('mp4') ? 'mp4' : 'webm';
-      const blob = new Blob(chunks, { type });
-      const path = `${currentProfile.id}/${Date.now()}_voice.${ext}`;
-      const { error } = await sb.storage.from('uploads').upload(path, blob, { contentType: type });
-      if (error) return alert(t('uploadFail') + error.message);
-      const { data } = sb.storage.from('uploads').getPublicUrl(path);
-      await sendMessage(data.publicUrl, type);
-    };
-    recorder.start();
-    $('mic-btn').textContent = '⏹️';
-  } catch (err) {
-    alert(t('micFail') + err.message);
-  }
-};
-
-// ---------- الثلاث نقط ----------
-$('messages').addEventListener('click', e => {
-  const btn = e.target.closest('.dots');
-  if (!btn) return;
-  e.stopPropagation();
-
-  menuMsgId = Number(btn.dataset.id);
-  const m = msgById.get(menuMsgId);
-  const canDelete = currentProfile && m &&
-    (m.user_id === currentProfile.id || currentProfile.role === 'admin');
-  $('menu-delete').classList.toggle('hidden', !canDelete);
-
-  const r = btn.getBoundingClientRect();
-  const menu = $('msg-menu');
-  menu.classList.remove('hidden');
-  menu.style.top = (r.bottom + 4) + 'px';
-  menu.style.left = Math.max(8, r.left - 110) + 'px';
-});
-
-document.addEventListener('click', () => $('msg-menu').classList.add('hidden'));
-$('msg-menu').addEventListener('click', e => e.stopPropagation());
-
-$('menu-copy').onclick = async () => {
-  const m = msgById.get(menuMsgId);
-  $('msg-menu').classList.add('hidden');
-  if (!m) return;
-  try {
-    await navigator.clipboard.writeText(m.content || m.file_url || '');
-  } catch {
-    alert(t('copyFail'));
-  }
-};
-
-$('menu-search').onclick = () => {
-  $('msg-menu').classList.add('hidden');
-  openSearch();
-};
-
-$('menu-delete').onclick = () => {
-  $('msg-menu').classList.add('hidden');
-  if (menuMsgId) deleteMessage(menuMsgId);
-};
-
-async function deleteMessage(id) {
-  if (!confirm(t('deleteAsk'))) return;
-  const { error } = await sb.from('messages').delete().eq('id', id);
-  if (error) return alert(t('deleteFail') + error.message);
-  removeMessageEl(id);
-}
-
-// ---------- البحث ----------
-function openSearch() {
-  $('search-bar').classList.remove('hidden');
-  $('search-input').focus();
-}
-
-function closeSearch() {
-  $('search-bar').classList.add('hidden');
-  $('search-input').value = '';
-  filterMessages('');
-}
-
-function filterMessages(q) {
-  q = q.trim().toLowerCase();
-  document.querySelectorAll('#messages .msg').forEach(el => {
-    el.style.display = !q || el.textContent.toLowerCase().includes(q) ? '' : 'none';
-  });
-}
-
-$('search-close').onclick = closeSearch;
-$('search-input').addEventListener('input', e => filterMessages(e.target.value));
-
-// ---------- السجل ----------
-$('history-close').onclick = () => $('history-modal').classList.add('hidden');
-
-document.querySelectorAll('.tab').forEach(tb => {
-  tb.onclick = () => {
-    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
-    tb.classList.add('active');
-    activeTab = tb.dataset.tab;
-    renderHistory();
-  };
-});
-
-function renderHistory() {
-  const list = $('history-list');
-  list.innerHTML = '';
-  const items = [];
-
-  for (const m of msgById.values()) {
-    const who = m.profiles?.display_name || '?';
-    const date = new Date(m.created_at);
-
-    if (activeTab === 'links') {
-      extractLinks(m.content).forEach(u => items.push({ title: u, url: u, who, date }));
-    } else if (activeTab === 'docs') {
-      if (m.file_url && !isMediaType(m.file_type))
-        items.push({ title: '📄 ' + fileName(m.file_url), url: m.file_url, who, date });
-    } else if (m.file_url && isMediaType(m.file_type)) {
-      const tp = m.file_type;
-      const title = tp.startsWith('image/') ? '🖼️ ' + t('image')
-                  : tp.startsWith('audio/') ? '🎙️ ' + t('audio') : '🎬 ' + t('video');
-      items.push({ title, url: m.file_url, who, date });
-    }
-  }
-
-  items.sort((a, b) => b.date - a.date);
-
-  if (!items.length) {
-    list.innerHTML = `<p class="empty">${t('noRows')}</p>`;
-    return;
-  }
-
-  items.forEach(it => {
-    const a = document.createElement('a');
-    a.href = it.url;
-    a.target = '_blank';
-    a.className = 'hist-item';
-    a.innerHTML = `<b>${esc(it.title)}</b><span>${esc(it.who)} · ${it.date.toLocaleString(lang === 'ar' ? 'ar-EG' : 'en-US')}</span>`;
-    list.appendChild(a);
-  });
-}
-
-// ---------- الوقت الفعلي ----------
-function subscribeToMessages() {
-  if (subscribed) return;
-  subscribed = true;
-
-  sb.channel('messages-channel')
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, async payload => {
-      const { data } = await sb.from('messages')
-        .select('*, profiles(display_name, avatar_url)')
-        .eq('id', payload.new.id)
-        .maybeSingle();
-      if (data) {
-        renderMessage(data);
-        scrollBottom();
-      }
-    })
-    .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'messages' }, payload => {
-      removeMessageEl(payload.old.id);
-    })
-    .subscribe();
-}
-
-// ---------- لوحة الأدمن ----------
-async function loadUsers() {
-  const { data, error } = await sb.from('profiles').select('*').order('created_at');
-  if (error) return alert(error.message);
-
-  const box = $('users-list');
-  box.innerHTML = '';
-
-  data.forEach(p => {
-    const row = document.createElement('div');
-    row.className = 'user-row';
-    row.innerHTML = `<span>${esc(p.display_name || p.id.slice(0, 8))}</span>`;
-
-    const sel = document.createElement('select');
-    ['admin', 'sender', 'viewer'].forEach(r => {
-      const opt = document.createElement('option');
-      opt.value = r;
-      opt.textContent = r;
-      if (r === p.role) opt.selected = true;
-      sel.appendChild(opt);
-    });
-
-    sel.onchange = async () => {
-      const { error } = await sb.from('profiles').update({ role: sel.value }).eq('id', p.id);
-      if (error) alert(error.message);
-      else await loadUsers();
-    };
-
-    row.appendChild(sel);
-    box.appendChild(row);
-  });
-}
-
-// ---------- بدء التطبيق ----------
-applyI18n();
+    } else if (tp.startsWit

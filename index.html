@@ -93,6 +93,7 @@
       <div class="set-list">
         <button id="set-avatar" class="set-item" data-i18n="changeAvatar"></button>
         <button id="set-name" class="set-item" data-i18n="changeName"></button>
+        <button id="set-bg" class="set-item" data-i18n="changeBg"></button>
         <button id="set-history" class="set-item" data-i18n="history"></button>
         <button id="set-admin" class="set-item hidden" data-i18n="admin"></button>
         <button id="set-search" class="set-item" data-i18n="search"></button>
@@ -102,6 +103,19 @@
         <button class="ghost lang-toggle"></button>
         <button class="ghost theme-toggle"></button>
       </div>
+    </div>
+  </div>
+
+  <!-- نافذة خلفية الشات -->
+  <div id="bg-modal" class="modal hidden">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h3 data-i18n="chatBg"></h3>
+        <button id="bg-close" class="ghost">✕</button>
+      </div>
+      <div id="bg-swatches"></div>
+      <button id="bg-upload" class="set-item" data-i18n="uploadBg"></button>
+      <button id="bg-reset" class="set-item danger-btn" data-i18n="resetBg"></button>
     </div>
   </div>
 
@@ -179,6 +193,7 @@
   </div>
 
   <input id="avatar-input" type="file" accept="image/*" hidden>
+  <input id="bg-input" type="file" accept="image/*" hidden>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="app.js"></script>
