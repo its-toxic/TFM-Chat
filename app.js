@@ -2,6 +2,8 @@ const SUPABASE_URL = 'https://jifoamltmdgpawpjgrbz.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_IiaTAO0BNUJTp_pzVidhhA_e1g82vpi';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+const $ = id => document.getElementById(id);
+
 const CONTACT_EMAIL = 'its.toxic0807@gmail.com';
 
 // ---------- الترجمة ----------
@@ -182,8 +184,6 @@ let recorder = null;
 let chunks = [];
 let kickChannel = null;
 let kickUserId = null;
-
-const $ = id => document.getElementById(id);
 
 // ---------- مساعدات ----------
 function esc(s) {
@@ -403,8 +403,6 @@ $('gate-save').onclick = async () => {
   }
   await enterChat(currentProfile.id);
 };
-
-$('logout-btn') && null;
 
 // ---------- البروفايل ----------
 async function loadProfile(userId) {
