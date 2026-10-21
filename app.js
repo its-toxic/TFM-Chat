@@ -12,7 +12,7 @@ const T = {
     pwRule: 'الباسورد 8 حروف على الأقل، فيه حرف كبير وحرف صغير ورقم ورمز (مثال: Ab12@xyz)',
     chooseAvatarSignup: 'لازم تختار صورة بروفايل عشان تعمل الحساب',
     chooseAvatar: 'لازم تختار صورة بروفايل قبل ما تدخل',
-    save: 'حفظ', forgot: 'نسيت كلمة السر؟', contact: 'التواصل والشكاوي',
+    save: 'حفظ', forgot: 'نسيت كلمة السر؟', google: 'تسجيل الدخول بجوجل', contact: 'التواصل والشكاوي',
     settings: 'الإعدادات', changeAvatar: 'تغيير صورة البروفايل', changeName: 'تغيير اسم المستخدم',
     history: 'السجل', admin: 'لوحة الأدمن', search: 'بحث', logout: 'تسجيل خروج',
     searchPh: 'ابحث في الرسايل...', msgPh: 'اكتب رسالة...', send: 'إرسال',
@@ -46,7 +46,7 @@ const T = {
     pwRule: 'At least 8 characters, with uppercase, lowercase, a number and a symbol (example: Ab12@xyz)',
     chooseAvatarSignup: 'You must choose a profile picture to create your account',
     chooseAvatar: 'You must choose a profile picture before entering',
-    save: 'Save', forgot: 'Forgot password?', contact: 'Contact & complaints',
+    save: 'Save', forgot: 'Forgot password?', google: 'Continue with Google', contact: 'Contact & complaints',
     settings: 'Settings', changeAvatar: 'Change profile picture', changeName: 'Change display name',
     history: 'History', admin: 'Admin panel', search: 'Search', logout: 'Log out',
     searchPh: 'Search messages...', msgPh: 'Write a message...', send: 'Send',
@@ -260,6 +260,17 @@ $('forgot-btn').onclick = async () => {
   const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo });
   if (error) setMsg('auth-msg', error.message);
   else setMsg('auth-msg', t('resetSent'), false);
+};
+
+// ---------- تسجيل الدخول بجوجل ----------
+$('google-btn').onclick = async () => {
+  setMsg('auth-msg', '');
+  const redirectTo = window.location.origin + window.location.pathname;
+  const { error } = await sb.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo }
+  });
+  if (error) setMsg('auth-msg', error.message);
 };
 
 // ---------- التواصل ----------
