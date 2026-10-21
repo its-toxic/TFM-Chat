@@ -559,4 +559,322 @@ function renderMessage(m) {
       html += `<img src="${esc(m.file_url)}" alt="">`;
     } else if (tp.startsWith('video/')) {
       html += `<video src="${esc(m.file_url)}" controls playsinline></video>`;
-    } else if (tp.startsWit
+    } else if (tp.startsWith('audio/')) {
+      html += `<audio src="${esc(m.file_url)}" controls preload="metadata"></audio>`;
+    } else {
+      html += `<a href="${esc(m.file_url)}" target="_blank">📄 ${esc(fileName(m.file_url))}</a>`;
+    }
+  }
+
+  div.innerHTML = html;
+  $('messages').appendChild(div);
+}
+
+function removeMessageEl(id) {
+  const el = document.querySelector(`.msg[data-id="${id}"]`);
+  if (el) el.remove();
+  msgById.delete(id);
+}
+
+async function loadMessages() {
+  const { data, error } = await sb.from('messages')
+    .select('*, profiles(display_name, avatar_url)')
+    .order('created_at', { ascending: true })
+    .limit(300);
+  if (error) {
+    alert(t('loadFail') + error.message);
+    return;
+  }
+  $('messages').innerHTML = '';
+  msgById = new Map();
+  data.forEach(renderMessage);
+  scrollBottom();
+}
+
+async function sendMessage(fileUrl = null, fileType = null) {
+  if (!currentProfile) return;
+  const content = $('msg-input').value.trim();
+  if (!content && !fileUrl) return;
+
+  const { error } = await sb.from('messages').insert({
+    user_id: currentProfile.id,
+    content: content || null,
+    file_url: fileUrl,
+    file_type: fileType
+  });
+  if (error) return alert(t('sendFail') + error.message);
+  $('msg-input').value = '';
+}
+
+$('send-btn').onclick = () => sendMessage();
+$('msg-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') sendMessage();
+});
+
+// ---------- رفع الملفات ----------
+$('attach-btn').onclick = () => $('file-input').click();
+
+$('file-input').onchange = async () => {
+  const file = $('file-input').files[0];
+  if (!file || !currentProfile) return;
+
+  const safeName = file.name.replace(/[^\w.\-]/g, '_');
+  const path = `${currentProfile.id}/${Date.now()}_${safeName}`;
+  const { error } = await sb.storage.from('uploads').upload(path, file, { contentType: file.type });
+  if (error) return alert(t('uploadFail') + error.message);
+
+  const { data } = sb.storage.from('uploads').getPublicUrl(path);
+  await sendMessage(data.publicUrl, file.type);
+  $('file-input').value = '';
+};
+
+// ---------- الكاميرا ----------
+async function openCamera() {
+  try {
+    camStream = await navigator.mediaDevices.getUserMedia({ video: true });
+    $('cam-video').srcObject = camStream;
+    $('cam-modal').classList.remove('hidden');
+  } catch (err) {
+    alert(t('camFail') + err.message);
+  }
+}
+
+function closeCamera() {
+  if (camStream) camStream.getTracks().forEach(tr => tr.stop());
+  camStream = null;
+  $('cam-video').srcObject = null;
+  $('cam-modal').classList.add('hidden');
+}
+
+$('cam-btn').onclick = openCamera;
+$('cam-close').onclick = closeCamera;
+
+$('cam-snap').onclick = () => {
+  const video = $('cam-video');
+  const canvas = $('cam-canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  canvas.getContext('2d').drawImage(video, 0, 0);
+
+  canvas.toBlob(async blob => {
+    if (!blob || !currentProfile) return;
+    const path = `${currentProfile.id}/${Date.now()}_photo.jpg`;
+    const { error } = await sb.storage.from('uploads').upload(path, blob, { contentType: 'image/jpeg' });
+    if (error) return alert(t('uploadFail') + error.message);
+    const { data } = sb.storage.from('uploads').getPublicUrl(path);
+    await sendMessage(data.publicUrl, 'image/jpeg');
+    closeCamera();
+  }, 'image/jpeg', 0.9);
+};
+
+// ---------- الميكروفون ----------
+$('mic-btn').onclick = async () => {
+  if (recorder && recorder.state === 'recording') {
+    recorder.stop();
+    $('mic-btn').textContent = '🎙️';
+    return;
+  }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    recorder = new MediaRecorder(stream);
+    chunks = [];
+    recorder.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+    recorder.onstop = async () => {
+      stream.getTracks().forEach(tr => tr.stop());
+      const type = recorder.mimeType || 'audio/webm';
+      const ext = type.includes('mp4') ? 'mp4' : 'webm';
+      const blob = new Blob(chunks, { type });
+      const path = `${currentProfile.id}/${Date.now()}_voice.${ext}`;
+      const { error } = await sb.storage.from('uploads').upload(path, blob, { contentType: type });
+      if (error) return alert(t('uploadFail') + error.message);
+      const { data } = sb.storage.from('uploads').getPublicUrl(path);
+      await sendMessage(data.publicUrl, type);
+    };
+    recorder.start();
+    $('mic-btn').textContent = '⏹️';
+  } catch (err) {
+    alert(t('micFail') + err.message);
+  }
+};
+
+// ---------- الثلاث نقط ----------
+$('messages').addEventListener('click', e => {
+  const btn = e.target.closest('.dots');
+  if (!btn) return;
+  e.stopPropagation();
+
+  menuMsgId = Number(btn.dataset.id);
+  const m = msgById.get(menuMsgId);
+  const canDelete = currentProfile && m &&
+    (m.user_id === currentProfile.id || currentProfile.role === 'admin');
+  $('menu-delete').classList.toggle('hidden', !canDelete);
+
+  const r = btn.getBoundingClientRect();
+  const menu = $('msg-menu');
+  menu.classList.remove('hidden');
+  menu.style.top = (r.bottom + 4) + 'px';
+  menu.style.left = Math.max(8, r.left - 110) + 'px';
+});
+
+document.addEventListener('click', () => $('msg-menu').classList.add('hidden'));
+$('msg-menu').addEventListener('click', e => e.stopPropagation());
+
+$('menu-copy').onclick = async () => {
+  const m = msgById.get(menuMsgId);
+  $('msg-menu').classList.add('hidden');
+  if (!m) return;
+  try {
+    await navigator.clipboard.writeText(m.content || m.file_url || '');
+  } catch {
+    alert(t('copyFail'));
+  }
+};
+
+$('menu-search').onclick = () => {
+  $('msg-menu').classList.add('hidden');
+  openSearch();
+};
+
+$('menu-delete').onclick = () => {
+  $('msg-menu').classList.add('hidden');
+  if (menuMsgId) deleteMessage(menuMsgId);
+};
+
+async function deleteMessage(id) {
+  if (!confirm(t('deleteAsk'))) return;
+  const { error } = await sb.from('messages').delete().eq('id', id);
+  if (error) return alert(t('deleteFail') + error.message);
+  removeMessageEl(id);
+}
+
+// ---------- البحث ----------
+function openSearch() {
+  $('search-bar').classList.remove('hidden');
+  $('search-input').focus();
+}
+
+function closeSearch() {
+  $('search-bar').classList.add('hidden');
+  $('search-input').value = '';
+  filterMessages('');
+}
+
+function filterMessages(q) {
+  q = q.trim().toLowerCase();
+  document.querySelectorAll('#messages .msg').forEach(el => {
+    el.style.display = !q || el.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+
+$('search-close').onclick = closeSearch;
+$('search-input').addEventListener('input', e => filterMessages(e.target.value));
+
+// ---------- السجل ----------
+$('history-close').onclick = () => $('history-modal').classList.add('hidden');
+
+document.querySelectorAll('.tab').forEach(tb => {
+  tb.onclick = () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    tb.classList.add('active');
+    activeTab = tb.dataset.tab;
+    renderHistory();
+  };
+});
+
+function renderHistory() {
+  const list = $('history-list');
+  list.innerHTML = '';
+  const items = [];
+
+  for (const m of msgById.values()) {
+    const who = m.profiles?.display_name || '?';
+    const date = new Date(m.created_at);
+
+    if (activeTab === 'links') {
+      extractLinks(m.content).forEach(u => items.push({ title: u, url: u, who, date }));
+    } else if (activeTab === 'docs') {
+      if (m.file_url && !isMediaType(m.file_type))
+        items.push({ title: '📄 ' + fileName(m.file_url), url: m.file_url, who, date });
+    } else if (m.file_url && isMediaType(m.file_type)) {
+      const tp = m.file_type;
+      const title = tp.startsWith('image/') ? '🖼️ ' + t('image')
+                  : tp.startsWith('audio/') ? '🎙️ ' + t('audio') : '🎬 ' + t('video');
+      items.push({ title, url: m.file_url, who, date });
+    }
+  }
+
+  items.sort((a, b) => b.date - a.date);
+
+  if (!items.length) {
+    list.innerHTML = `<p class="empty">${t('noRows')}</p>`;
+    return;
+  }
+
+  items.forEach(it => {
+    const a = document.createElement('a');
+    a.href = it.url;
+    a.target = '_blank';
+    a.className = 'hist-item';
+    a.innerHTML = `<b>${esc(it.title)}</b><span>${esc(it.who)} · ${it.date.toLocaleString(lang === 'ar' ? 'ar-EG' : 'en-US')}</span>`;
+    list.appendChild(a);
+  });
+}
+
+// ---------- الوقت الفعلي ----------
+function subscribeToMessages() {
+  if (subscribed) return;
+  subscribed = true;
+
+  sb.channel('messages-channel')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, async payload => {
+      const { data } = await sb.from('messages')
+        .select('*, profiles(display_name, avatar_url)')
+        .eq('id', payload.new.id)
+        .maybeSingle();
+      if (data) {
+        renderMessage(data);
+        scrollBottom();
+      }
+    })
+    .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'messages' }, payload => {
+      removeMessageEl(payload.old.id);
+    })
+    .subscribe();
+}
+
+// ---------- لوحة الأدمن ----------
+async function loadUsers() {
+  const { data, error } = await sb.from('profiles').select('*').order('created_at');
+  if (error) return alert(error.message);
+
+  const box = $('users-list');
+  box.innerHTML = '';
+
+  data.forEach(p => {
+    const row = document.createElement('div');
+    row.className = 'user-row';
+    row.innerHTML = `<span>${esc(p.display_name || p.id.slice(0, 8))}</span>`;
+
+    const sel = document.createElement('select');
+    ['admin', 'sender', 'viewer'].forEach(r => {
+      const opt = document.createElement('option');
+      opt.value = r;
+      opt.textContent = r;
+      if (r === p.role) opt.selected = true;
+      sel.appendChild(opt);
+    });
+
+    sel.onchange = async () => {
+      const { error } = await sb.from('profiles').update({ role: sel.value }).eq('id', p.id);
+      if (error) alert(error.message);
+      else await loadUsers();
+    };
+
+    row.appendChild(sel);
+    box.appendChild(row);
+  });
+}
+
+// ---------- بدء التطبيق ----------
+applyBg();
+applyI18n();
