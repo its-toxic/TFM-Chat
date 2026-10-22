@@ -14,7 +14,7 @@
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="stylesheet" href="style.css?v=6">
-  <link rel="stylesheet" href="ai.css?v=1">
+  <link rel="stylesheet" href="ai.css?v=2">
 </head>
 <body>
 
@@ -91,6 +91,7 @@
         <span id="user-label" class="user-label"></span>
       </div>
       <div class="header-actions">
+        <button id="ai-open" class="ghost gear ai-head-btn" title="زعبوله"></button>
         <button id="members-btn" class="ghost gear" title="👥">👥</button>
         <button id="settings-btn" class="ghost gear" title="⚙️">⚙️</button>
       </div>
@@ -129,9 +130,6 @@
     <div class="credits">
       <span>Developed by</span> <b>Ahmed</b> &nbsp;|&nbsp; 📞 010-325-12602
     </div>
-
-    <!-- زرار زعبوله (على الجنب) -->
-    <button id="ai-open" class="ai-side" title="زعبوله">🤖</button>
   </div>
 
   <!-- قايمة الأعضاء (من الجنب) -->
@@ -149,6 +147,7 @@
       <h3 data-i18n="roles"></h3>
       <button id="admin-close" class="ghost">✕</button>
     </div>
+    <div id="ai-books-admin" class="ai-books-admin"></div>
     <div id="users-list" class="members-body"></div>
   </aside>
 
@@ -255,25 +254,14 @@
     </div>
   </div>
 
-  <!-- زعبوله: قايمة الشاتات -->
-  <div id="ai-list-screen" class="ai-screen hidden">
-    <div class="ai-head">
-      <button id="ai-list-back" class="ai-back" aria-label="back"><span class="arrow">→</span></button>
-      <div class="ai-avatar">🤖</div>
-      <div class="ai-title">
-        <b>زعبوله</b>
-        <span class="ai-en">Zaboula</span>
-      </div>
-    </div>
-    <div id="ai-subtitle" class="ai-subtitle"></div>
-    <div id="ai-rooms" class="ai-rooms"></div>
-  </div>
-
-  <!-- زعبوله: شات -->
+  <!-- شات زعبوله -->
   <div id="ai-chat-screen" class="ai-screen hidden">
     <div class="ai-head">
-      <button id="ai-chat-back" class="ai-back" aria-label="back"><span class="arrow">→</span></button>
-      <div class="ai-avatar">🤖</div>
+      <button id="ai-chat-back" class="ai-back" aria-label="back">
+        <span class="arrow">→</span>
+        <span id="ai-back-text" class="ai-back-text"></span>
+      </button>
+      <div class="ai-avatar"></div>
       <div class="ai-title">
         <b>زعبوله</b>
         <span class="ai-en">Zaboula</span>
@@ -307,6 +295,6 @@
   </script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="app.js?v=6"></script>
-  <script src="ai.js?v=1"></script>
+  <script src="ai.js?v=2"></script>
 </body>
 </html>

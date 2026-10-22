@@ -1,32 +1,19 @@
-/* ---------- زرار زعبوله على الجنب ---------- */
-.ai-side {
-  position: fixed;
-  top: 50%;
-  inset-inline-end: 0;
-  transform: translateY(-50%);
-  z-index: 40;
-  width: 52px;
-  height: 58px;
-  padding: 0;
-  border-radius: 14px 0 0 14px;
-  background: linear-gradient(90deg, var(--accent), var(--accent2));
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* ---------- زرار زعبوله في الهيدر ---------- */
+.ai-head-btn {
+  background: transparent;
+  padding: 4px 8px;
+  font-size: 18px;
+  line-height: 1;
 }
-[dir="ltr"] .ai-side {
-  border-radius: 0 14px 14px 0;
-}
-.ai-side img {
-  width: 40px;
-  height: 40px;
+.ai-head-btn img {
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   object-fit: cover;
   display: block;
 }
 
-/* ---------- الشاشات (فوق الشات) ---------- */
+/* ---------- شاشة الشات ---------- */
 .ai-screen {
   position: fixed;
   inset: 0;
@@ -42,21 +29,25 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 12px 14px;
+  padding: calc(12px + env(safe-area-inset-top)) 14px 12px;
   background: var(--header);
   border-bottom: 1px solid var(--border);
   flex: 0 0 auto;
 }
 
 .ai-back {
-  background: transparent;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--ghost);
   color: var(--text);
-  font-size: 22px;
-  padding: 4px 8px;
-  min-height: auto;
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-size: 15px;
   flex: 0 0 auto;
+  min-height: auto;
 }
-.ai-back .arrow { display: inline-block; }
+.ai-back .arrow { display: inline-block; font-size: 18px; }
 [dir="ltr"] .ai-back .arrow { transform: scaleX(-1); }
 
 .ai-avatar {
@@ -65,9 +56,6 @@
   flex: 0 0 44px;
   border-radius: 50%;
   overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   background: #0b0f2a;
   border: 2px solid var(--link);
 }
@@ -75,7 +63,6 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 50%;
   display: block;
 }
 
@@ -91,39 +78,6 @@
 
 .ai-tools { display: flex; gap: 6px; flex: 0 0 auto; }
 .ai-tools button { padding: 6px 10px; font-size: 13px; }
-
-/* ---------- قايمة الشاتات ---------- */
-.ai-subtitle {
-  padding: 14px 16px 4px;
-  color: var(--muted);
-  font-size: 13px;
-}
-
-.ai-rooms {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 10px 14px;
-  overflow-y: auto;
-}
-
-.ai-room {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: var(--card-b);
-  color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 10px 12px;
-  text-align: start;
-}
-.ai-room.current { border-color: var(--link); }
-.ai-room:hover { filter: brightness(1.1); }
-
-.ai-room-info { display: flex; flex-direction: column; min-width: 0; }
-.ai-room-info b { font-size: 15px; }
-.ai-room-info small { color: var(--muted); font-size: 12px; }
 
 /* ---------- رسايل الشات ---------- */
 .ai-messages {
@@ -181,12 +135,43 @@
 .ai-composer input { flex: 1; min-width: 0; font-size: 16px; }
 .ai-composer button { flex: 0 0 auto; padding: 10px 12px; min-height: 44px; }
 
+/* ---------- كتب زعبوله (في لوحة الأدمن) ---------- */
+.ai-books-admin {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border-bottom: 1px solid var(--border);
+  max-height: 40vh;
+  overflow-y: auto;
+  flex: 0 0 auto;
+}
+.ai-books-admin h3 { color: var(--text); font-size: 15px; }
+.ai-book-form { display: flex; flex-direction: column; gap: 6px; }
+.ai-book-form select,
+.ai-book-form input[type="file"] { width: 100%; font-size: 14px; padding: 8px; }
+.ai-book-list { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--muted); }
+.ai-book-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  background: var(--card-b);
+  padding: 6px 8px;
+  border-radius: 10px;
+}
+.ai-book-row span {
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
 /* ---------- الكمبيوتر ---------- */
 @media (min-width: 901px) {
   .ai-head { padding: 14px 28px; }
   .ai-messages { padding: 24px 40px; }
   .ai-msg { max-width: 62%; font-size: 15px; }
   .ai-composer { padding: 14px 40px; }
-  .ai-subtitle { padding: 16px 40px 4px; }
-  .ai-rooms { padding: 12px 40px; }
 }

@@ -2,14 +2,16 @@
 
 const AI_ICON = '<img src="ai-icon.png" alt="زعبوله">';
 const AI_MAX_FILE = 5 * 1024 * 1024;
+const AI_BOOK_MAX = 50 * 1024 * 1024;
 const AI_MIME = ['application/pdf', 'image/png', 'image/jpeg', 'image/webp', 'image/heic', 'image/heif'];
+const ROOMS = ['ar-1', 'ar-2', 'ar-3', 'ar-4', 'en-1', 'en-2', 'en-3', 'en-4'];
 
 let aiRoom = null;
 let aiBusy = false;
 let aiPending = null;
 let aiLangMode = localStorage.getItem('aiLang') || lang;
 
-// نحط صورة زعبوله في كل الأماكن
+// نحط صورة زعبوله في الأماكن المطلوبة
 $('ai-open').innerHTML = AI_ICON;
 document.querySelectorAll('.ai-avatar').forEach(el => { el.innerHTML = AI_ICON; });
 
@@ -38,46 +40,10 @@ function appendAiBubble(role, text, extra = '') {
 
 function applyAiLabels() {
   $('ai-room-label').textContent = aiRoom ? aiRoomTitle(aiRoom) : '';
+  $('ai-back-text').textContent = lang === 'en' ? 'Back' : 'رجوع';
   $('ai-lang').textContent = aiLangMode === 'en' ? 'عربي' : 'EN';
   $('ai-input').placeholder = lang === 'en' ? 'Write to Zaboula...' : 'اكتب لزعبوله...';
-  $('ai-subtitle').textContent = lang === 'en' ? 'Choose a chat' : 'اختار الشات اللي عايزه';
   $('ai-attach').title = lang === 'en' ? 'Attach a PDF or image' : 'ارفع PDF أو صورة';
-}
-
-function renderAiRooms() {
-  const box = $('ai-rooms');
-  box.innerHTML = '';
-  const cur = currentRoom();
-
-  ['ar', 'en'].forEach(tr => {
-    [1, 2, 3, 4].forEach(lv => {
-      const room = `${tr}-${lv}`;
-      const isCur = room === cur;
-      const b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'ai-room' + (isCur ? ' current' : '');
-
-      const av = document.createElement('div');
-      av.className = 'ai-avatar';
-      av.innerHTML = AI_ICON;
-
-      const info = document.createElement('div');
-      info.className = 'ai-room-info';
-      const title = document.createElement('b');
-      title.textContent = 'زعبوله · ' + aiRoomTitle(room);
-      info.appendChild(title);
-      if (isCur) {
-        const small = document.createElement('small');
-        small.textContent = lang === 'en' ? 'Your current room' : 'شاتك الحالي';
-        info.appendChild(small);
-      }
-
-      b.appendChild(av);
-      b.appendChild(info);
-      b.onclick = () => openAiChat(room);
-      box.appendChild(b);
-    });
-  });
 }
 
 async function renderAiHistory() {
@@ -106,15 +72,13 @@ async function renderAiHistory() {
 
 async function openAiChat(room) {
   aiRoom = room;
-  $('ai-list-screen').classList.add('hidden');
   $('ai-chat-screen').classList.remove('hidden');
   applyAiLabels();
   await renderAiHistory();
 }
 
-function closeAiScreens() {
+function closeAiScreen() {
   $('ai-chat-screen').classList.add('hidden');
-  $('ai-list-screen').classList.add('hidden');
 }
 
 function readFileB64(file) {
@@ -180,15 +144,104 @@ async function aiSend() {
   }
 }
 
-// ---------- الأحداث ----------
-$('ai-open').onclick = () => {
-  renderAiRooms();
-  applyAiLabels();
-  $('ai-list-screen').classList.remove('hidden');
-};
+// ---------- كتب زعبوله (الأدمن) ----------
+async function loadAiBooksAdmin() {
+  const box = $('ai-books-admin');
+  box.innerHTML = '';
 
-$('ai-list-back').onclick = closeAiScreens;
-$('ai-chat-back').onclick = closeAiScreens;
+  const title = document.createElement('h3');
+  title.textContent = lang === 'en' ? '📚 Zaboula books' : '📚 كتب زعبوله';
+  box.appendChild(title);
+
+  const form = document.createElement('div');
+  form.className = 'ai-book-form';
+
+  const sel = document.createElement('select');
+  ROOMS.forEach(r => {
+    const o = document.createElement('option');
+    o.value = r;
+    o.textContent = aiRoomTitle(r);
+    sel.appendChild(o);
+  });
+
+  const file = document.createElement('input');
+  file.type = 'file';
+  file.accept = 'application/pdf';
+
+  const up = document.createElement('button');
+  up.type = 'button';
+  up.className = 'primary';
+  up.textContent = lang === 'en' ? 'Upload book' : 'ارفع الكتاب';
+  up.onclick = () => uploadBook(sel.value, file);
+
+  form.appendChild(sel);
+  form.appendChild(file);
+  form.appendChild(up);
+  box.appendChild(form);
+
+  const list = document.createElement('div');
+  list.className = 'ai-book-list';
+  box.appendChild(list);
+
+  const { data, error } = await sb.from('ai_books').select('id, room, title, path').order('id', { ascending: true });
+  if (error) {
+    list.textContent = error.message;
+    return;
+  }
+  if (!data || !data.length) {
+    list.textContent = lang === 'en' ? 'No books yet' : 'مفيش كتب لسه';
+    return;
+  }
+
+  data.forEach(b => {
+    const row = document.createElement('div');
+    row.className = 'ai-book-row';
+    const info = document.createElement('span');
+    info.textContent = `${aiRoomTitle(b.room)} · ${b.title}`;
+    const del = document.createElement('button');
+    del.type = 'button';
+    del.className = 'danger-btn';
+    del.textContent = '🗑️';
+    del.onclick = () => deleteBook(b);
+    row.appendChild(info);
+    row.appendChild(del);
+    list.appendChild(row);
+  });
+}
+
+async function uploadBook(room, fileInput) {
+  const f = fileInput.files[0];
+  if (!f) return alert(lang === 'en' ? 'Choose a PDF first' : 'اختار ملف PDF الأول');
+  if (f.type !== 'application/pdf') return alert(lang === 'en' ? 'PDF files only' : 'PDF بس');
+  if (f.size > AI_BOOK_MAX) return alert(lang === 'en' ? 'Max 50 MB' : 'أقصى حجم 50 ميجا');
+
+  const safeName = f.name.replace(/[^\w.\-]/g, '_');
+  const path = `${room}/${Date.now()}_${safeName}`;
+
+  const { error: upErr } = await sb.storage.from('books').upload(path, f, { contentType: 'application/pdf' });
+  if (upErr) return alert(upErr.message);
+
+  const { error } = await sb.from('ai_books').insert({ room, title: f.name, path, size_bytes: f.size });
+  if (error) return alert(error.message);
+
+  fileInput.value = '';
+  await loadAiBooksAdmin();
+}
+
+async function deleteBook(b) {
+  if (!confirm(lang === 'en' ? 'Delete this book?' : 'تمسح الكتاب ده؟')) return;
+  const { error: stErr } = await sb.storage.from('books').remove([b.path]);
+  if (stErr) return alert(stErr.message);
+  const { error } = await sb.from('ai_books').delete().eq('id', b.id);
+  if (error) return alert(error.message);
+  await loadAiBooksAdmin();
+}
+
+// ---------- الأحداث ----------
+// الزرار يفتح على طول الشات اللي المستخدم مختاره
+$('ai-open').onclick = () => openAiChat(currentRoom());
+
+$('ai-chat-back').onclick = closeAiScreen;
 
 $('ai-lang').onclick = () => {
   aiLangMode = aiLangMode === 'en' ? 'ar' : 'en';
@@ -235,7 +288,10 @@ $('ai-input').addEventListener('keydown', e => {
   if (e.key === 'Enter') aiSend();
 });
 
-// لو المستخدم خرج من الحساب، نقفل شاشات زعبوله
+// تحميل قايمة الكتب لما الأدمن يفتح لوحته
+$('set-admin').addEventListener('click', () => setTimeout(loadAiBooksAdmin, 0));
+
+// لو المستخدم خرج من الحساب، نقفل شات زعبوله
 sb.auth.onAuthStateChange((event, session) => {
-  if (!session) closeAiScreens();
+  if (!session) closeAiScreen();
 });
