@@ -558,6 +558,17 @@ $('settings-btn').onclick = () => {
 };
 $('settings-close').onclick = () => $('settings-modal').classList.add('hidden');
 
+$('set-logout').onclick = async () => {
+  $('settings-modal').classList.add('hidden');
+  leaveTyping();
+  if (kickChannel) {
+    sb.removeChannel(kickChannel);
+    kickChannel = null;
+    kickUserId = null;
+  }
+  await sb.auth.signOut();
+};
+
 $('set-avatar').onclick = () => {
   $('settings-modal').classList.add('hidden');
   $('avatar-input').click();
