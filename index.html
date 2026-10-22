@@ -13,7 +13,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-192.png">
-  <link rel="stylesheet" href="style.css?v=4">
+  <link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
 
@@ -106,6 +106,9 @@
     </div>
 
     <div id="messages"></div>
+
+    <!-- مين بيكتب / بيسجل صوت -->
+    <div id="typing-bar" class="typing-bar hidden"></div>
 
     <div class="composer">
       <input id="file-input" type="file" accept="image/*,video/*,application/pdf" hidden>
@@ -250,6 +253,6 @@
     }
   </script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="app.js?v=4"></script>
+  <script src="app.js?v=5"></script>
 </body>
 </html>

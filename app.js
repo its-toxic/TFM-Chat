@@ -51,6 +51,7 @@ const T = {
     membersTitle: 'الأعضاء', adminsTitle: 'الأدمنز', membersSection: 'الأعضاء',
     roleAdmin: 'أدمن', roleSender: 'مرسل', roleViewer: 'مشاهد',
     notifOn: '🔔 تفعيل الإشعارات', notifOk: 'الإشعارات اتفعلت', notifDenied: 'الإشعارات متقفلة من إعدادات المتصفح',
+    typingNow: 'بيكتب...', recording: 'بيسجل صوت...',
     createdBy: 'Created by', designedBy: 'Designed by',
     toggleLang: 'English', toLight: '☀️ وضع نهار', toDark: '🌙 وضع ليلي'
   },
@@ -96,6 +97,7 @@ const T = {
     membersTitle: 'Members', adminsTitle: 'Admins', membersSection: 'Members',
     roleAdmin: 'Admin', roleSender: 'Sender', roleViewer: 'Viewer',
     notifOn: '🔔 Enable notifications', notifOk: 'Notifications enabled', notifDenied: 'Notifications are blocked in browser settings',
+    typingNow: 'is typing...', recording: 'is recording audio...',
     createdBy: 'Created by', designedBy: 'Designed by',
     toggleLang: 'عربي', toLight: '☀️ Day mode', toDark: '🌙 Night mode'
   }
@@ -194,6 +196,13 @@ let chunks = [];
 let kickChannel = null;
 let kickUserId = null;
 let unread = 0;
+
+// مؤشر الكتابة والتسجيل
+let typingChannel = null;
+let typingRoom = null;
+const typers = new Map();
+let lastTypeSent = 0;
+let recTimer = null;
 
 const ROLE_KEYS = { admin: 'roleAdmin', sender: 'roleSender', viewer: 'roleViewer' };
 
@@ -385,6 +394,7 @@ sb.auth.onAuthStateChange(async (event, session) => {
   } else {
     currentProfile = null;
     $('avatar-gate').classList.add('hidden');
+    leaveTyping();
     showScreen('auth-screen');
   }
 });
@@ -405,6 +415,7 @@ async function enterChat(userId) {
   showScreen('chat-screen');
   await loadMessages();
   subscribeToMessages();
+  joinTyping();
 }
 
 // بوابة صورة البروفايل للحسابات اللي مفيهاش صورة
@@ -627,6 +638,99 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 
+// ---------- مؤشر "بيكتب" و"بيسجل صوت" ----------
+// بيستخدم Broadcast في Supabase، فمش محتاج أي جدول جديد
+function joinTyping() {
+  const room = currentRoom();
+  if (typingChannel && typingRoom === room) return;
+  leaveTyping();
+
+  typingRoom = room;
+  typingChannel = sb.channel('typing-' + room, { config: { broadcast: { self: false } } })
+    .on('broadcast', { event: 'typing' }, ({ payload }) => {
+      if (!payload || !currentProfile || payload.id === currentProfile.id) return;
+      if (payload.kind === 'stop') typers.delete(payload.id);
+      else typers.set(payload.id, { name: payload.name, kind: payload.kind, at: Date.now() });
+      renderTyping();
+    })
+    .subscribe();
+}
+
+function leaveTyping() {
+  if (typingChannel) sb.removeChannel(typingChannel);
+  typingChannel = null;
+  typingRoom = null;
+  typers.clear();
+  renderTyping();
+}
+
+function sendTyping(kind) {
+  if (!typingChannel || !currentProfile) return;
+  typingChannel.send({
+    type: 'broadcast',
+    event: 'typing',
+    payload: {
+      id: currentProfile.id,
+      name: currentProfile.display_name || t('userDefault'),
+      kind
+    }
+  });
+}
+
+function renderTyping() {
+  const bar = $('typing-bar');
+  const list = [...typers.values()];
+  if (!list.length) {
+    bar.classList.add('hidden');
+    bar.innerHTML = '';
+    return;
+  }
+  bar.innerHTML = list.map(p =>
+    `<span><span class="typing-name">${esc(p.name)}</span> ${p.kind === 'rec' ? t('recording') : t('typingNow')}<span class="tdots"><b></b><b></b><b></b></span></span>`
+  ).join('');
+  bar.classList.remove('hidden');
+}
+
+// لو ماحدش كتب من فترة، بنشيله من الشريط
+setInterval(() => {
+  let changed = false;
+  const now = Date.now();
+  for (const [id, p] of typers) {
+    if (now - p.at > 3500) {
+      typers.delete(id);
+      changed = true;
+    }
+  }
+  if (changed) renderTyping();
+}, 1000);
+
+$('msg-input').addEventListener('input', () => {
+  const hasText = $('msg-input').value.trim().length > 0;
+  if (!hasText) {
+    sendTyping('stop');
+    lastTypeSent = 0;
+    return;
+  }
+  const now = Date.now();
+  if (now - lastTypeSent > 2000) {
+    sendTyping('text');
+    lastTypeSent = now;
+  }
+});
+
+function startRecTyping() {
+  sendTyping('rec');
+  recTimer = setInterval(() => sendTyping('rec'), 2000);
+}
+
+function stopRecTyping() {
+  if (recTimer) {
+    clearInterval(recTimer);
+    recTimer = null;
+  }
+  sendTyping('stop');
+}
+
 // ---------- خلفية الشات ----------
 // المفتاح اتغير عشان الخلفية القديمة المحفوظة (الزرقا) ما تتطبقش تاني
 const BG_KEY = 'chatBg_v2';
@@ -838,6 +942,8 @@ async function sendMessage(fileUrl = null, fileType = null) {
   });
   if (error) return alert(t('sendFail') + error.message);
   $('msg-input').value = '';
+  sendTyping('stop');
+  lastTypeSent = 0;
 }
 
 $('send-btn').onclick = () => sendMessage();
@@ -914,6 +1020,7 @@ $('mic-btn').onclick = async () => {
     chunks = [];
     recorder.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
     recorder.onstop = async () => {
+      stopRecTyping();
       stream.getTracks().forEach(tr => tr.stop());
       const type = recorder.mimeType || 'audio/webm';
       const ext = type.includes('mp4') ? 'mp4' : 'webm';
@@ -925,6 +1032,7 @@ $('mic-btn').onclick = async () => {
       await sendMessage(data.publicUrl, type);
     };
     recorder.start();
+    startRecTyping();
     $('mic-btn').textContent = '⏹️';
   } catch (err) {
     alert(t('micFail') + err.message);
@@ -1085,6 +1193,9 @@ function subscribeToMessages() {
         .eq('id', payload.new.id)
         .maybeSingle();
       if (data) {
+        // الشخص اللي بعت الرسالة بيوقف مؤشر الكتابة عند الكل
+        if (data.user_id !== currentProfile?.id) typers.delete(data.user_id);
+        renderTyping();
         renderMessage(data);
         renderPinned();
         scrollBottom();
@@ -1154,3 +1265,4 @@ async function loadUsers() {
 applyRoomUI();
 applyBg();
 applyI18n();
+renderTyping();
