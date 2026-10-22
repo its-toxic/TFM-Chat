@@ -13,7 +13,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-192.png">
-  <link rel="stylesheet" href="style.css?v=5">
+  <link rel="stylesheet" href="style.css?v=6">
 </head>
 <body>
 
@@ -110,6 +110,12 @@
     <!-- مين بيكتب / بيسجل صوت -->
     <div id="typing-bar" class="typing-bar hidden"></div>
 
+    <!-- شريط الرد -->
+    <div id="reply-bar" class="reply-bar hidden">
+      <span id="reply-text"></span>
+      <button id="reply-cancel" class="ghost">✕</button>
+    </div>
+
     <div class="composer">
       <input id="file-input" type="file" accept="image/*,video/*,application/pdf" hidden>
       <button id="attach-btn" class="ghost" title="📎">📎</button>
@@ -131,6 +137,15 @@
       <button id="members-close" class="ghost">✕</button>
     </div>
     <div id="members-list" class="members-body"></div>
+  </aside>
+
+  <!-- لوحة إدارة الأدوار (من الجنب) -->
+  <aside id="admin-modal" class="members-panel admin-panel hidden">
+    <div class="members-head">
+      <h3 data-i18n="roles"></h3>
+      <button id="admin-close" class="ghost">✕</button>
+    </div>
+    <div id="users-list" class="members-body"></div>
   </aside>
 
   <!-- قايمة الإعدادات -->
@@ -170,17 +185,6 @@
     </div>
   </div>
 
-  <!-- لوحة الأدمن -->
-  <div id="admin-modal" class="modal hidden">
-    <div class="modal-box">
-      <div class="modal-head">
-        <h3 data-i18n="roles"></h3>
-        <button id="admin-close" class="ghost">✕</button>
-      </div>
-      <div id="users-list"></div>
-    </div>
-  </div>
-
   <!-- بوابة صورة البروفايل (لا يمكن إغلاقها إلا بالحفظ) -->
   <div id="avatar-gate" class="modal hidden">
     <div class="modal-box">
@@ -193,6 +197,9 @@
 
   <!-- قايمة الثلاث نقط للرسالة -->
   <div id="msg-menu" class="msg-menu hidden">
+    <div id="menu-emojis" class="emo-row"></div>
+    <button id="menu-reply" data-i18n="reply"></button>
+    <button id="menu-edit" data-i18n="edit"></button>
     <button id="menu-copy" data-i18n="copy"></button>
     <button id="menu-search" data-i18n="search"></button>
     <button id="menu-pin" data-i18n="pin"></button>
@@ -253,6 +260,6 @@
     }
   </script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="app.js?v=5"></script>
+  <script src="app.js?v=6"></script>
 </body>
 </html>

@@ -6,6 +6,7 @@ const $ = id => document.getElementById(id);
 
 const CONTACT_EMAIL = 'its.toxic0807@gmail.com';
 const BASE_TITLE = 'TFM Chat';
+const EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🔥'];
 
 // ---------- الترجمة ----------
 const T = {
@@ -35,6 +36,8 @@ const T = {
     camFail: 'ما قدرتش أفتح الكاميرا: ', micFail: 'ما قدرتش أفتح الميكروفون: ',
     copyFail: 'ما قدرتش أنسخ الرسالة', copy: 'نسخ', delete: 'مسح',
     pin: '📌 تثبيت', unpin: '📌 فك التثبيت', pinnedLabel: 'مثبتة', pinFail: 'فشل التثبيت: ',
+    reply: '↩️ رد', edit: '✏️ تعديل', replyTo: 'رد على', editedLabel: '(معدّلة)',
+    editAsk: 'عدّل الرسالة:', editFail: 'فشل التعديل: ', reactFail: 'فشل التفاعل: ',
     noRows: 'مفيش حاجة هنا لسه', tabLinks: 'روابط', tabDocs: 'ملفات', tabMedia: 'ميديا',
     image: 'صورة', audio: 'صوت', video: 'فيديو', file: 'ملف',
     camera: 'الكاميرا', shoot: 'تصوير وإرسال',
@@ -81,6 +84,8 @@ const T = {
     camFail: 'Could not open camera: ', micFail: 'Could not open microphone: ',
     copyFail: 'Could not copy the message', copy: 'Copy', delete: 'Delete',
     pin: '📌 Pin', unpin: '📌 Unpin', pinnedLabel: 'Pinned', pinFail: 'Pin failed: ',
+    reply: '↩️ Reply', edit: '✏️ Edit', replyTo: 'Replying to', editedLabel: '(edited)',
+    editAsk: 'Edit message:', editFail: 'Edit failed: ', reactFail: 'Reaction failed: ',
     noRows: 'Nothing here yet', tabLinks: 'Links', tabDocs: 'Documents', tabMedia: 'Media',
     image: 'Image', audio: 'Audio', video: 'Video', file: 'File',
     camera: 'Camera', shoot: 'Capture & send',
@@ -204,6 +209,10 @@ const typers = new Map();
 let lastTypeSent = 0;
 let recTimer = null;
 
+// الرد والتفاعلات
+let replyingTo = null;
+const reactMap = new Map(); // رقم الرسالة -> Map(إيموجي -> Set(user ids))
+
 const ROLE_KEYS = { admin: 'roleAdmin', sender: 'roleSender', viewer: 'roleViewer' };
 
 // ---------- مساعدات ----------
@@ -217,6 +226,7 @@ function showScreen(id) {
   ['auth-screen', 'recovery-screen', 'chat-screen'].forEach(s => $(s).classList.add('hidden'));
   $(id).classList.remove('hidden');
   $('members-panel').classList.add('hidden');
+  $('admin-modal').classList.add('hidden');
 }
 
 function setMsg(id, text, isErr = true) {
@@ -259,6 +269,10 @@ function refreshUserLabel() {
   if (!currentProfile) return;
   const name = currentProfile.display_name || t('userDefault');
   $('user-label').textContent = `${name} (${currentProfile.role})`;
+}
+
+function canSend() {
+  return !!currentProfile && (currentProfile.role === 'admin' || currentProfile.role === 'sender');
 }
 
 async function uploadAvatar(file, userId) {
@@ -446,7 +460,6 @@ async function loadProfile(userId) {
   }
 
   currentProfile = data;
-  const canWrite = data.role === 'admin' || data.role === 'sender';
   refreshUserLabel();
 
   const av = $('my-avatar');
@@ -457,11 +470,12 @@ async function loadProfile(userId) {
     av.hidden = true;
   }
 
-  $('msg-input').disabled = !canWrite;
-  $('send-btn').disabled = !canWrite;
-  $('attach-btn').disabled = !canWrite;
-  $('cam-btn').disabled = !canWrite;
-  $('mic-btn').disabled = !canWrite;
+  const writable = canSend();
+  $('msg-input').disabled = !writable;
+  $('send-btn').disabled = !writable;
+  $('attach-btn').disabled = !writable;
+  $('cam-btn').disabled = !writable;
+  $('mic-btn').disabled = !writable;
   return true;
 }
 
@@ -679,6 +693,7 @@ function sendTyping(kind) {
 
 function renderTyping() {
   const bar = $('typing-bar');
+  if (!bar) return;
   const list = [...typers.values()];
   if (!list.length) {
     bar.classList.add('hidden');
@@ -832,11 +847,68 @@ $('bg-input').onchange = async () => {
   $('bg-input').value = '';
 };
 
-// ---------- الرسايل ----------
-function renderMessage(m) {
-  msgById.set(m.id, m);
-  if (document.querySelector(`.msg[data-id="${m.id}"]`)) return;
+// ---------- التفاعلات ----------
+function applyReact(kind, id, emoji, userId) {
+  id = Number(id);
+  if (!reactMap.has(id)) reactMap.set(id, new Map());
+  const byEmoji = reactMap.get(id);
+  if (!byEmoji.has(emoji)) byEmoji.set(emoji, new Set());
+  const set = byEmoji.get(emoji);
+  if (kind === 'add') set.add(userId);
+  else set.delete(userId);
+  if (!set.size) byEmoji.delete(emoji);
+  if (!byEmoji.size) reactMap.delete(id);
+  paintReacts(id);
+}
 
+function reactsHtml(id) {
+  const map = reactMap.get(Number(id));
+  if (!map) return '';
+  let html = '';
+  map.forEach((users, emoji) => {
+    const on = currentProfile && users.has(currentProfile.id);
+    html += `<button class="react-chip${on ? ' on' : ''}" data-rid="${id}" data-emoji="${esc(emoji)}">${esc(emoji)} ${users.size}</button>`;
+  });
+  return html;
+}
+
+function paintReacts(id) {
+  const box = document.querySelector(`.reacts[data-rid="${id}"]`);
+  if (box) box.innerHTML = reactsHtml(id);
+}
+
+async function toggleReact(id, emoji) {
+  if (!currentProfile) return;
+  const users = reactMap.get(Number(id))?.get(emoji);
+  const mineOn = !!(users && users.has(currentProfile.id));
+
+  if (mineOn) {
+    const { error } = await sb.from('reactions')
+      .delete()
+      .match({ message_id: id, user_id: currentProfile.id, emoji });
+    if (error) return alert(t('reactFail') + error.message);
+    applyReact('del', id, emoji, currentProfile.id);
+  } else {
+    const { error } = await sb.from('reactions')
+      .insert({ message_id: id, user_id: currentProfile.id, emoji });
+    if (error) return alert(t('reactFail') + error.message);
+    applyReact('add', id, emoji, currentProfile.id);
+  }
+}
+
+async function loadReactions(ids) {
+  if (!ids.length) return;
+  const { data, error } = await sb.from('reactions').select('*').in('message_id', ids);
+  if (error) return;
+  (data || []).forEach(r => applyReact('add', r.message_id, r.emoji, r.user_id));
+}
+
+// ---------- الرسايل ----------
+function snippetOf(m) {
+  return (m.content || (m.file_url ? t('file') : '')).slice(0, 60);
+}
+
+function buildMessageEl(m) {
   const div = document.createElement('div');
   const mine = currentProfile && m.user_id === currentProfile.id;
   div.className = 'msg' + (mine ? ' mine' : '') + (m.pinned ? ' pinned' : '');
@@ -850,7 +922,18 @@ function renderMessage(m) {
 
   let html = `<button class="dots" data-id="${m.id}">⋮</button>`;
   html += `<div class="meta">${avatar}${esc(m.profiles?.display_name || '?')} · ${time}${pinMark}</div>`;
-  if (m.content) html += `<div>${esc(m.content)}</div>`;
+
+  if (m.reply_to) {
+    const parent = msgById.get(Number(m.reply_to));
+    const pName = parent?.profiles?.display_name || '';
+    const pText = parent ? snippetOf(parent) : '';
+    html += `<div class="quote" data-target="${m.reply_to}"><b>${esc(pName)}</b><span>${esc(pText)}</span></div>`;
+  }
+
+  if (m.content) {
+    const edited = m.edited_at ? `<span class="edited">${t('editedLabel')}</span>` : '';
+    html += `<div>${esc(m.content)}${edited}</div>`;
+  }
 
   if (m.file_url) {
     const tp = m.file_type || '';
@@ -865,14 +948,31 @@ function renderMessage(m) {
     }
   }
 
+  html += `<div class="reacts" data-rid="${m.id}">${reactsHtml(m.id)}</div>`;
+
   div.innerHTML = html;
-  $('messages').appendChild(div);
+  return div;
+}
+
+function renderMessage(m) {
+  msgById.set(m.id, m);
+  if (document.querySelector(`.msg[data-id="${m.id}"]`)) return;
+  $('messages').appendChild(buildMessageEl(m));
+}
+
+// نبدّل الرسالة في مكانها (للتعديل والتثبيت)
+function replaceMsgEl(m) {
+  const old = document.querySelector(`.msg[data-id="${m.id}"]`);
+  const el = buildMessageEl(m);
+  if (old) old.replaceWith(el);
+  else $('messages').appendChild(el);
 }
 
 function removeMessageEl(id) {
   const el = document.querySelector(`.msg[data-id="${id}"]`);
   if (el) el.remove();
-  msgById.delete(id);
+  msgById.delete(Number(id));
+  reactMap.delete(Number(id));
   renderPinned();
 }
 
@@ -896,20 +996,16 @@ function renderPinned() {
   bar.classList.remove('hidden');
 }
 
-function applyPinnedClass(m) {
-  const el = document.querySelector(`.msg[data-id="${m.id}"]`);
-  if (el) el.classList.toggle('pinned', !!m.pinned);
-}
-
-$('pinned-bar').onclick = () => {
-  const id = $('pinned-bar').dataset.id;
+function flashMsg(id) {
   const el = document.querySelector(`.msg[data-id="${id}"]`);
   if (!el) return;
   el.scrollIntoView({ behavior: 'smooth', block: 'center' });
   el.classList.remove('flash');
   void el.offsetWidth;
   el.classList.add('flash');
-};
+}
+
+$('pinned-bar').onclick = () => flashMsg($('pinned-bar').dataset.id);
 
 async function loadMessages() {
   const { data, error } = await sb.from('messages')
@@ -923,10 +1019,28 @@ async function loadMessages() {
   }
   $('messages').innerHTML = '';
   msgById = new Map();
+  reactMap.clear();
   data.forEach(renderMessage);
   renderPinned();
+  await loadReactions(data.map(m => m.id));
   scrollBottom();
 }
+
+// ---------- الرد ----------
+function setReply(m) {
+  replyingTo = m.id;
+  $('reply-text').textContent = `${t('replyTo')} ${m.profiles?.display_name || '?'}: ${snippetOf(m)}`;
+  $('reply-bar').classList.remove('hidden');
+  $('msg-input').focus();
+}
+
+function clearReply() {
+  replyingTo = null;
+  $('reply-text').textContent = '';
+  $('reply-bar').classList.add('hidden');
+}
+
+$('reply-cancel').onclick = clearReply;
 
 async function sendMessage(fileUrl = null, fileType = null) {
   if (!currentProfile) return;
@@ -938,10 +1052,12 @@ async function sendMessage(fileUrl = null, fileType = null) {
     content: content || null,
     file_url: fileUrl,
     file_type: fileType,
-    room: currentRoom()
+    room: currentRoom(),
+    reply_to: replyingTo
   });
   if (error) return alert(t('sendFail') + error.message);
   $('msg-input').value = '';
+  clearReply();
   sendTyping('stop');
   lastTypeSent = 0;
 }
@@ -1039,32 +1155,89 @@ $('mic-btn').onclick = async () => {
   }
 };
 
-// ---------- الثلاث نقط ----------
-$('messages').addEventListener('click', e => {
-  const btn = e.target.closest('.dots');
-  if (!btn) return;
-  e.stopPropagation();
-
+// ---------- الثلاث نقط + الضغط على التفاعلات والرد ----------
+function openMenu(btn) {
   menuMsgId = Number(btn.dataset.id);
   const m = msgById.get(menuMsgId);
-  const canDelete = currentProfile && m &&
-    (m.user_id === currentProfile.id || currentProfile.role === 'admin');
-  $('menu-delete').classList.toggle('hidden', !canDelete);
-
-  // زرار التثبيت للأدمن بس
   const isAdmin = currentProfile && currentProfile.role === 'admin';
+  const mine = !!(m && currentProfile && m.user_id === currentProfile.id);
+
+  $('menu-delete').classList.toggle('hidden', !(m && (mine || isAdmin)));
   $('menu-pin').classList.toggle('hidden', !isAdmin);
   $('menu-pin').textContent = m && m.pinned ? t('unpin') : t('pin');
+  $('menu-edit').classList.toggle('hidden', !(mine && m && !m.file_url));
+  $('menu-reply').classList.toggle('hidden', !canSend());
 
   const r = btn.getBoundingClientRect();
   const menu = $('msg-menu');
   menu.classList.remove('hidden');
+  const left = Math.min(Math.max(8, r.left - 110), window.innerWidth - 200);
   menu.style.top = (r.bottom + 4) + 'px';
-  menu.style.left = Math.max(8, r.left - 110) + 'px';
+  menu.style.left = Math.max(8, left) + 'px';
+}
+
+$('messages').addEventListener('click', e => {
+  const chip = e.target.closest('.react-chip');
+  if (chip) {
+    toggleReact(Number(chip.dataset.rid), chip.dataset.emoji);
+    return;
+  }
+
+  const quote = e.target.closest('.quote');
+  if (quote) {
+    flashMsg(Number(quote.dataset.target));
+    return;
+  }
+
+  const btn = e.target.closest('.dots');
+  if (!btn) return;
+  e.stopPropagation();
+  openMenu(btn);
+});
+
+// صف الإيموجي جوه القايمة
+const emoRow = $('menu-emojis');
+EMOJIS.forEach(em => {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.textContent = em;
+  b.dataset.emoji = em;
+  emoRow.appendChild(b);
+});
+emoRow.addEventListener('click', e => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  $('msg-menu').classList.add('hidden');
+  if (menuMsgId) toggleReact(menuMsgId, b.dataset.emoji);
 });
 
 document.addEventListener('click', () => $('msg-menu').classList.add('hidden'));
 $('msg-menu').addEventListener('click', e => e.stopPropagation());
+
+$('menu-reply').onclick = () => {
+  $('msg-menu').classList.add('hidden');
+  const m = msgById.get(menuMsgId);
+  if (m && canSend()) setReply(m);
+};
+
+$('menu-edit').onclick = async () => {
+  $('msg-menu').classList.add('hidden');
+  const m = msgById.get(menuMsgId);
+  if (!m || !currentProfile || m.user_id !== currentProfile.id || m.file_url) return;
+  const text = prompt(t('editAsk'), m.content || '');
+  if (text === null) return;
+  const clean = text.trim();
+  if (!clean || clean === m.content) return;
+
+  const edited_at = new Date().toISOString();
+  const { error } = await sb.from('messages')
+    .update({ content: clean, edited_at })
+    .eq('id', m.id);
+  if (error) return alert(t('editFail') + error.message);
+  m.content = clean;
+  m.edited_at = edited_at;
+  replaceMsgEl(m);
+};
 
 $('menu-copy').onclick = async () => {
   const m = msgById.get(menuMsgId);
@@ -1089,7 +1262,7 @@ $('menu-pin').onclick = async () => {
   const { error } = await sb.from('messages').update({ pinned: !m.pinned }).eq('id', m.id);
   if (error) return alert(t('pinFail') + error.message);
   m.pinned = !m.pinned;
-  applyPinnedClass(m);
+  replaceMsgEl(m);
   renderPinned();
 };
 
@@ -1206,11 +1379,21 @@ function subscribeToMessages() {
       const m = msgById.get(payload.new.id);
       if (!m) return;
       m.pinned = payload.new.pinned;
-      applyPinnedClass(m);
+      m.content = payload.new.content;
+      m.edited_at = payload.new.edited_at;
+      replaceMsgEl(m);
       renderPinned();
     })
     .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'messages' }, payload => {
       removeMessageEl(payload.old.id);
+    })
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'reactions' }, payload => {
+      if (!msgById.has(Number(payload.new.message_id))) return;
+      applyReact('add', payload.new.message_id, payload.new.emoji, payload.new.user_id);
+    })
+    .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'reactions' }, payload => {
+      if (!msgById.has(Number(payload.old.message_id))) return;
+      applyReact('del', payload.old.message_id, payload.old.emoji, payload.old.user_id);
     })
     .subscribe();
 }

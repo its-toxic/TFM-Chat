@@ -314,6 +314,44 @@ header {
 .msg a { color: var(--link); }
 .msg.mine a { color: #fff3c4; }
 
+.edited { font-size: 11px; opacity: 0.7; margin-inline-start: 4px; }
+
+/* الرد (اقتباس فوق الرسالة) */
+.quote {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: rgba(0, 0, 0, 0.18);
+  border-inline-start: 3px solid var(--link);
+  padding: 4px 8px;
+  border-radius: 8px;
+  margin-bottom: 6px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.quote b { color: var(--link); }
+.quote span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0.85;
+}
+.msg.mine .quote b { color: #fff3c4; }
+
+/* التفاعلات */
+.reacts { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.reacts:empty { display: none; }
+.react-chip {
+  background: var(--ghost);
+  color: var(--text);
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  border: 1px solid var(--border);
+  line-height: 1.6;
+}
+.react-chip.on { background: var(--link); color: #000; border-color: var(--link); }
+
 .dots {
   position: absolute;
   top: 6px;
@@ -354,6 +392,26 @@ header {
   40% { opacity: 1; }
 }
 
+/* ---------- شريط الرد ---------- */
+.reply-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 14px;
+  background: var(--header);
+  border-top: 1px solid var(--border);
+  font-size: 13px;
+  color: var(--link);
+}
+#reply-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.reply-bar button { padding: 4px 10px; min-height: auto; flex: 0 0 auto; }
+
 .composer {
   display: flex;
   gap: 8px;
@@ -379,13 +437,15 @@ header {
 }
 .credits b { color: var(--text); }
 
-/* ---------- قايمة الأعضاء (من الجنب) ---------- */
+/* ---------- الألواح الجانبية (الأعضاء + إدارة الأدوار) ---------- */
 .members-panel {
   position: fixed;
   top: 0;
   bottom: 0;
   inset-inline-end: 0;
   width: min(86vw, 300px);
+  height: 100vh;
+  height: 100dvh;
   background: var(--panel);
   border-inline-start: 1px solid var(--border);
   box-shadow: -8px 0 30px rgba(0, 0, 0, 0.35);
@@ -393,17 +453,21 @@ header {
   display: flex;
   flex-direction: column;
 }
+.admin-panel { width: min(92vw, 380px); }
 .members-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 14px;
   border-bottom: 1px solid var(--border);
+  flex: 0 0 auto;
 }
 .members-head h3 { color: var(--text); font-size: 17px; }
 .members-body {
   flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   padding: 10px;
   display: flex;
   flex-direction: column;
@@ -455,6 +519,35 @@ header {
 .role-tag { font-size: 11px; color: var(--muted); }
 .member-row.is-admin .role-tag { color: #fff3c4; }
 
+/* صفوف إدارة الأدوار */
+.members-body .user-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  background: var(--card-b);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.user-row > span {
+  flex: 1 1 100%;
+  color: var(--text);
+  font-weight: bold;
+  word-break: break-word;
+}
+.user-row select {
+  flex: 1 1 120px;
+  min-width: 0;
+  padding: 8px 10px;
+  font-size: 14px;
+}
+.user-row button {
+  flex: 0 0 auto;
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
 /* ---------- قايمة الثلاث نقط ---------- */
 .msg-menu {
   position: fixed;
@@ -465,7 +558,8 @@ header {
   border: 1px solid var(--border);
   border-radius: 12px;
   overflow: hidden;
-  min-width: 130px;
+  min-width: 160px;
+  max-width: 92vw;
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
 }
 .msg-menu button {
@@ -476,6 +570,22 @@ header {
   border-radius: 0;
 }
 .msg-menu button:hover { background: var(--ghost); filter: none; }
+
+.msg-menu .emo-row {
+  display: flex;
+  justify-content: space-around;
+  gap: 2px;
+  padding: 6px;
+  border-bottom: 1px solid var(--border);
+}
+.msg-menu .emo-row button {
+  background: transparent;
+  padding: 4px 6px;
+  font-size: 20px;
+  border-radius: 8px;
+  text-align: center;
+}
+.msg-menu .emo-row button:hover { background: var(--ghost); }
 
 /* ---------- الإعدادات ---------- */
 .set-list { display: flex; flex-direction: column; gap: 8px; }
@@ -540,14 +650,6 @@ header {
 .contact-box .contact-line { font-size: 16px; font-weight: bold; direction: ltr; text-align: end; }
 .contact-box textarea { min-height: 90px; resize: vertical; width: 100%; }
 
-.user-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--border);
-}
-
 /* ---------- الموبايل (لحد 480px) ---------- */
 @media (max-width: 480px) {
   header { padding: 10px; }
@@ -586,9 +688,11 @@ header {
   .search-bar { padding: 10px 40px; }
   .pinned-bar { padding: 10px 40px; }
   .typing-bar { padding: 8px 40px; }
+  .reply-bar { padding: 8px 40px; }
   .card { width: 400px; padding: 32px 30px; }
   .logo { width: 140px; }
   h1 { font-size: 28px; }
   .modal-box { width: 520px; }
   .members-panel { width: 320px; }
+  .admin-panel { width: 380px; }
 }
