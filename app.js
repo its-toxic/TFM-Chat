@@ -560,13 +560,19 @@ $('settings-close').onclick = () => $('settings-modal').classList.add('hidden');
 
 $('set-logout').onclick = async () => {
   $('settings-modal').classList.add('hidden');
-  leaveTyping();
-  if (kickChannel) {
-    sb.removeChannel(kickChannel);
-    kickChannel = null;
-    kickUserId = null;
+  try {
+    leaveTyping();
+    if (kickChannel) {
+      sb.removeChannel(kickChannel);
+      kickChannel = null;
+      kickUserId = null;
+    }
+    const { error } = await sb.auth.signOut({ scope: 'local' });
+    if (error) alert('خطأ تسجيل الخروج: ' + error.message);
+  } catch (e) {
+    alert('خطأ تسجيل الخروج: ' + e.message);
   }
-  await sb.auth.signOut();
+  window.location.reload();
 };
 
 $('set-avatar').onclick = () => {
