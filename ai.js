@@ -11,7 +11,6 @@ let aiBusy = false;
 let aiPending = null;
 let aiLangMode = localStorage.getItem('aiLang') || lang;
 
-// نحط صورة زعبوله في الأماكن المطلوبة
 $('ai-open').innerHTML = AI_ICON;
 document.querySelectorAll('.ai-avatar').forEach(el => { el.innerHTML = AI_ICON; });
 
@@ -24,8 +23,8 @@ function aiRoomTitle(room) {
 
 function greetingText() {
   return lang === 'en'
-    ? "Hi! I'm Zaboula, your AI assistant 🤖\nWrite to me in English, Arabic or any language. I can explain, solve problems, search the web, and review PDFs or images you send me."
-    : 'مرحبا! أنا زعبوله، مساعد الذكاء الاصطناعي الخاص بيك 🤖\nكلمني بالمصري أو بالإنجليزي أو أي لغة. أقدر أشرح وأحل وأبحث على النت، وتبعتلي PDF أو صورة وأنا أحللها أو أعدّلها لك.';
+    ? "Hi! I'm Zaboula, your AI assistant 🤖\nWrite to me in English, Arabic or any language. I can explain, solve problems, search the web, and review PDFs or images you send me.\n\n⚠️ Note: this chat is deleted if you leave it for one hour without sending any message."
+    : 'مرحبا! أنا زعبوله، مساعد الذكاء الاصطناعي الخاص بيك 🤖\nكلمني بالمصري أو بالإنجليزي أو أي لغة. أقدر أشرح وأحل وأبحث على النت، وتبعتلي PDF أو صورة وأنا أحللها أو أعدّلها لك.\n\n⚠️ ملحوظة: الشات ده هيتمسح لو طلعت برا الشات لمدة ساعة من غير ما تبعت أي رسالة.';
 }
 
 function appendAiBubble(role, text, extra = '') {
@@ -238,7 +237,6 @@ async function deleteBook(b) {
 }
 
 // ---------- الأحداث ----------
-// الزرار يفتح على طول الشات اللي المستخدم مختاره
 $('ai-open').onclick = () => openAiChat(currentRoom());
 
 $('ai-chat-back').onclick = closeAiScreen;
@@ -288,10 +286,8 @@ $('ai-input').addEventListener('keydown', e => {
   if (e.key === 'Enter') aiSend();
 });
 
-// تحميل قايمة الكتب لما الأدمن يفتح لوحته
 $('set-admin').addEventListener('click', () => setTimeout(loadAiBooksAdmin, 0));
 
-// لو المستخدم خرج من الحساب، نقفل شات زعبوله
 sb.auth.onAuthStateChange((event, session) => {
   if (!session) closeAiScreen();
 });

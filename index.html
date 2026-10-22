@@ -34,7 +34,6 @@
         <button class="auth-tab" data-mode="signup" data-i18n="signup">حساب جديد</button>
       </div>
 
-      <!-- اختيار الشعبة والمستوى قبل الدخول -->
       <div class="room-picker">
         <div>
           <label data-i18n="track">الشعبة</label>
@@ -102,17 +101,14 @@
       <button id="search-close" class="ghost">✕</button>
     </div>
 
-    <!-- شريط الرسالة المثبتة -->
     <div id="pinned-bar" class="pinned-bar hidden">
       <span id="pinned-text"></span>
     </div>
 
     <div id="messages"></div>
 
-    <!-- مين بيكتب / بيسجل صوت -->
     <div id="typing-bar" class="typing-bar hidden"></div>
 
-    <!-- شريط الرد -->
     <div id="reply-bar" class="reply-bar hidden">
       <span id="reply-text"></span>
       <button id="reply-cancel" class="ghost">✕</button>
@@ -141,7 +137,7 @@
     <div id="members-list" class="members-body"></div>
   </aside>
 
-  <!-- لوحة إدارة الأدوار والكتب (من الجنب) -->
+  <!-- لوحة الأدمن: كلمات السر والكتب والأدوار (من الجنب) -->
   <aside id="admin-modal" class="members-panel admin-panel hidden">
     <div class="members-head">
       <h3 data-i18n="roles"></h3>
@@ -188,7 +184,7 @@
     </div>
   </div>
 
-  <!-- بوابة صورة البروفايل (لا يمكن إغلاقها إلا بالحفظ) -->
+  <!-- بوابة صورة البروفايل -->
   <div id="avatar-gate" class="modal hidden">
     <div class="modal-box">
       <h3 data-i18n="chooseAvatar"></h3>
@@ -296,5 +292,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="app.js?v=6"></script>
   <script src="ai.js?v=3"></script>
+  <script src="gate.js?v=1"></script>
+  <script src="ai-warn.js?v=2"></script>
 </body>
 </html>
