@@ -46,6 +46,8 @@ const T = {
     track: 'الشعبة', level: 'المستوى',
     trkAr: 'عربي', trkEn: 'انجليزي',
     lvl1: 'الأول', lvl2: 'الثاني', lvl3: 'الثالث', lvl4: 'الرابع',
+    membersTitle: 'الأعضاء', adminsTitle: 'الأدمنز', membersSection: 'الأعضاء',
+    roleAdmin: 'أدمن', roleSender: 'مرسل', roleViewer: 'مشاهد',
     createdBy: 'Created by', designedBy: 'Designed by',
     toggleLang: 'English', toLight: '☀️ وضع نهار', toDark: '🌙 وضع ليلي'
   },
@@ -87,6 +89,8 @@ const T = {
     track: 'Track', level: 'Level',
     trkAr: 'Arabic', trkEn: 'English',
     lvl1: '1st', lvl2: '2nd', lvl3: '3rd', lvl4: '4th',
+    membersTitle: 'Members', adminsTitle: 'Admins', membersSection: 'Members',
+    roleAdmin: 'Admin', roleSender: 'Sender', roleViewer: 'Viewer',
     createdBy: 'Created by', designedBy: 'Designed by',
     toggleLang: 'عربي', toLight: '☀️ Day mode', toDark: '🌙 Night mode'
   }
@@ -185,6 +189,8 @@ let chunks = [];
 let kickChannel = null;
 let kickUserId = null;
 
+const ROLE_KEYS = { admin: 'roleAdmin', sender: 'roleSender', viewer: 'roleViewer' };
+
 // ---------- مساعدات ----------
 function esc(s) {
   return String(s ?? '')
@@ -195,6 +201,8 @@ function esc(s) {
 function showScreen(id) {
   ['auth-screen', 'recovery-screen', 'chat-screen'].forEach(s => $(s).classList.add('hidden'));
   $(id).classList.remove('hidden');
+  // نقفل قايمة الأعضاء لما نغير الشاشة
+  $('members-panel').classList.add('hidden');
 }
 
 function setMsg(id, text, isErr = true) {
@@ -460,6 +468,57 @@ function watchKick(userId) {
       }
     })
     .subscribe();
+}
+
+// ---------- الأعضاء (قايمة من الجنب) ----------
+$('members-btn').onclick = async () => {
+  $('members-panel').classList.remove('hidden');
+  await loadMembers();
+};
+$('members-close').onclick = () => $('members-panel').classList.add('hidden');
+
+async function loadMembers() {
+  const box = $('members-list');
+  const { data, error } = await sb.from('profiles')
+    .select('id, display_name, avatar_url, role, is_banned')
+    .order('display_name', { ascending: true });
+
+  if (error) {
+    box.innerHTML = `<p class="empty">${esc(error.message)}</p>`;
+    return;
+  }
+
+  const admins = data.filter(p => p.role === 'admin');
+  const others = data.filter(p => p.role !== 'admin');
+  box.innerHTML = '';
+
+  const addSection = title => {
+    const h = document.createElement('div');
+    h.className = 'members-section';
+    h.textContent = title;
+    box.appendChild(h);
+  };
+
+  const addRow = p => {
+    const name = p.display_name || t('userDefault');
+    const row = document.createElement('div');
+    row.className = 'member-row' + (p.role === 'admin' ? ' is-admin' : '');
+
+    const avatar = p.avatar_url
+      ? `<img class="member-avatar" src="${esc(p.avatar_url)}" alt="">`
+      : `<div class="member-avatar member-initial">${esc(name.charAt(0))}</div>`;
+    const banned = p.is_banned && currentProfile && currentProfile.role === 'admin' ? ' 🚫' : '';
+
+    row.innerHTML = `${avatar}<div class="member-info"><b>${esc(name)}${banned}</b><span class="role-tag">${t(ROLE_KEYS[p.role] || 'roleViewer')}</span></div>`;
+    box.appendChild(row);
+  };
+
+  if (admins.length) {
+    addSection(t('adminsTitle'));
+    admins.forEach(addRow);
+  }
+  addSection(t('membersSection'));
+  others.forEach(addRow);
 }
 
 // ---------- الإعدادات ----------
