@@ -1,4 +1,4 @@
-ا<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
@@ -13,7 +13,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-192.png">
-  <link rel="stylesheet" href="style.css?v=3">
+  <link rel="stylesheet" href="style.css?v=4">
 </head>
 <body>
 
@@ -100,6 +100,11 @@
       <button id="search-close" class="ghost">✕</button>
     </div>
 
+    <!-- شريط الرسالة المثبتة -->
+    <div id="pinned-bar" class="pinned-bar hidden">
+      <span id="pinned-text"></span>
+    </div>
+
     <div id="messages"></div>
 
     <div class="composer">
@@ -139,6 +144,7 @@
         <button id="set-history" class="set-item" data-i18n="history"></button>
         <button id="set-admin" class="set-item hidden" data-i18n="admin"></button>
         <button id="set-search" class="set-item" data-i18n="search"></button>
+        <button id="set-notify" class="set-item" data-i18n="notifOn"></button>
         <button id="set-logout" class="set-item danger-btn" data-i18n="logout"></button>
       </div>
       <div class="set-row">
@@ -186,6 +192,7 @@
   <div id="msg-menu" class="msg-menu hidden">
     <button id="menu-copy" data-i18n="copy"></button>
     <button id="menu-search" data-i18n="search"></button>
+    <button id="menu-pin" data-i18n="pin"></button>
     <button id="menu-delete" class="danger" data-i18n="delete"></button>
   </div>
 
@@ -243,6 +250,6 @@
     }
   </script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="app.js?v=3"></script>
+  <script src="app.js?v=4"></script>
 </body>
 </html>

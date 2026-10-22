@@ -251,6 +251,20 @@ header {
 }
 .search-bar input { flex: 1; min-width: 0; }
 
+/* ---------- شريط الرسالة المثبتة ---------- */
+.pinned-bar {
+  padding: 8px 14px;
+  background: var(--ghost);
+  border-bottom: 1px solid var(--border);
+  color: var(--link);
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* ---------- الشات ---------- */
 #chat-screen { height: auto; min-height: 100vh; min-height: 100dvh; overflow: visible; background: var(--page); }
 
@@ -284,6 +298,14 @@ header {
   border-radius: 16px 16px 4px 16px;
   padding: 10px 12px 10px 36px;
 }
+.msg.pinned { border: 2px solid var(--link); }
+.msg.flash { animation: flashMsg 1.2s ease; }
+@keyframes flashMsg {
+  from { box-shadow: 0 0 0 5px var(--link); }
+  to { box-shadow: 0 0 0 0 transparent; }
+}
+.pin-mark { color: var(--link); margin-inline-start: 4px; }
+
 .meta { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
 .msg.mine .meta { color: #ffe3ea; }
 .msg img, .msg video, .msg canvas { max-width: 100%; height: auto; border-radius: 10px; margin-top: 6px; }
@@ -534,6 +556,7 @@ header {
   .msg { max-width: 62%; font-size: 15px; }
   .composer { padding: 14px 40px; }
   .search-bar { padding: 10px 40px; }
+  .pinned-bar { padding: 10px 40px; }
   .card { width: 400px; padding: 32px 30px; }
   .logo { width: 140px; }
   h1 { font-size: 28px; }

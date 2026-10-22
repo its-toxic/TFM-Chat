@@ -5,6 +5,7 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const $ = id => document.getElementById(id);
 
 const CONTACT_EMAIL = 'its.toxic0807@gmail.com';
+const BASE_TITLE = 'TFM Chat';
 
 // ---------- الترجمة ----------
 const T = {
@@ -33,6 +34,7 @@ const T = {
     uploadFail: 'فشل الرفع: ', loadFail: 'فشل تحميل الرسايل: ',
     camFail: 'ما قدرتش أفتح الكاميرا: ', micFail: 'ما قدرتش أفتح الميكروفون: ',
     copyFail: 'ما قدرتش أنسخ الرسالة', copy: 'نسخ', delete: 'مسح',
+    pin: '📌 تثبيت', unpin: '📌 فك التثبيت', pinnedLabel: 'مثبتة', pinFail: 'فشل التثبيت: ',
     noRows: 'مفيش حاجة هنا لسه', tabLinks: 'روابط', tabDocs: 'ملفات', tabMedia: 'ميديا',
     image: 'صورة', audio: 'صوت', video: 'فيديو', file: 'ملف',
     camera: 'الكاميرا', shoot: 'تصوير وإرسال',
@@ -48,6 +50,7 @@ const T = {
     lvl1: 'الأول', lvl2: 'الثاني', lvl3: 'الثالث', lvl4: 'الرابع',
     membersTitle: 'الأعضاء', adminsTitle: 'الأدمنز', membersSection: 'الأعضاء',
     roleAdmin: 'أدمن', roleSender: 'مرسل', roleViewer: 'مشاهد',
+    notifOn: '🔔 تفعيل الإشعارات', notifOk: 'الإشعارات اتفعلت', notifDenied: 'الإشعارات متقفلة من إعدادات المتصفح',
     createdBy: 'Created by', designedBy: 'Designed by',
     toggleLang: 'English', toLight: '☀️ وضع نهار', toDark: '🌙 وضع ليلي'
   },
@@ -76,6 +79,7 @@ const T = {
     uploadFail: 'Upload failed: ', loadFail: 'Failed to load messages: ',
     camFail: 'Could not open camera: ', micFail: 'Could not open microphone: ',
     copyFail: 'Could not copy the message', copy: 'Copy', delete: 'Delete',
+    pin: '📌 Pin', unpin: '📌 Unpin', pinnedLabel: 'Pinned', pinFail: 'Pin failed: ',
     noRows: 'Nothing here yet', tabLinks: 'Links', tabDocs: 'Documents', tabMedia: 'Media',
     image: 'Image', audio: 'Audio', video: 'Video', file: 'File',
     camera: 'Camera', shoot: 'Capture & send',
@@ -91,6 +95,7 @@ const T = {
     lvl1: '1st', lvl2: '2nd', lvl3: '3rd', lvl4: '4th',
     membersTitle: 'Members', adminsTitle: 'Admins', membersSection: 'Members',
     roleAdmin: 'Admin', roleSender: 'Sender', roleViewer: 'Viewer',
+    notifOn: '🔔 Enable notifications', notifOk: 'Notifications enabled', notifDenied: 'Notifications are blocked in browser settings',
     createdBy: 'Created by', designedBy: 'Designed by',
     toggleLang: 'عربي', toLight: '☀️ Day mode', toDark: '🌙 Night mode'
   }
@@ -188,6 +193,7 @@ let recorder = null;
 let chunks = [];
 let kickChannel = null;
 let kickUserId = null;
+let unread = 0;
 
 const ROLE_KEYS = { admin: 'roleAdmin', sender: 'roleSender', viewer: 'roleViewer' };
 
@@ -201,7 +207,6 @@ function esc(s) {
 function showScreen(id) {
   ['auth-screen', 'recovery-screen', 'chat-screen'].forEach(s => $(s).classList.add('hidden'));
   $(id).classList.remove('hidden');
-  // نقفل قايمة الأعضاء لما نغير الشاشة
   $('members-panel').classList.add('hidden');
 }
 
@@ -576,10 +581,51 @@ $('set-search').onclick = () => {
   openSearch();
 };
 
-$('set-logout').onclick = () => {
+// ---------- الإشعارات ----------
+$('set-notify').onclick = async () => {
   $('settings-modal').classList.add('hidden');
-  sb.auth.signOut();
+  if (!('Notification' in window)) return alert(t('notifDenied'));
+  const perm = await Notification.requestPermission();
+  alert(perm === 'granted' ? t('notifOk') : t('notifDenied'));
 };
+
+function playBeep() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.frequency.value = 880;
+    g.gain.value = 0.08;
+    o.connect(g);
+    g.connect(ctx.destination);
+    o.start();
+    o.stop(ctx.currentTime + 0.15);
+    o.onended = () => ctx.close();
+  } catch {}
+}
+
+function newMessageAlert(m) {
+  playBeep();
+  if (!document.hidden) return;
+
+  unread++;
+  document.title = `(${unread}) ${BASE_TITLE}`;
+
+  if ('Notification' in window && Notification.permission === 'granted') {
+    const name = m.profiles?.display_name || '?';
+    const body = m.content || (m.file_url ? t('file') : '');
+    try {
+      new Notification(name, { body, icon: 'icon-192.png' });
+    } catch {}
+  }
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) {
+    unread = 0;
+    document.title = BASE_TITLE;
+  }
+});
 
 // ---------- خلفية الشات ----------
 // المفتاح اتغير عشان الخلفية القديمة المحفوظة (الزرقا) ما تتطبقش تاني
@@ -688,16 +734,18 @@ function renderMessage(m) {
   if (document.querySelector(`.msg[data-id="${m.id}"]`)) return;
 
   const div = document.createElement('div');
-  div.className = 'msg' + (currentProfile && m.user_id === currentProfile.id ? ' mine' : '');
+  const mine = currentProfile && m.user_id === currentProfile.id;
+  div.className = 'msg' + (mine ? ' mine' : '') + (m.pinned ? ' pinned' : '');
   div.dataset.id = m.id;
 
   const avatar = m.profiles?.avatar_url
     ? `<img class="msg-avatar" src="${esc(m.profiles.avatar_url)}" alt="">`
     : '';
   const time = new Date(m.created_at).toLocaleTimeString(lang === 'ar' ? 'ar-EG' : 'en-US');
+  const pinMark = m.pinned ? '<span class="pin-mark">📌</span>' : '';
 
   let html = `<button class="dots" data-id="${m.id}">⋮</button>`;
-  html += `<div class="meta">${avatar}${esc(m.profiles?.display_name || '?')} · ${time}</div>`;
+  html += `<div class="meta">${avatar}${esc(m.profiles?.display_name || '?')} · ${time}${pinMark}</div>`;
   if (m.content) html += `<div>${esc(m.content)}</div>`;
 
   if (m.file_url) {
@@ -721,7 +769,43 @@ function removeMessageEl(id) {
   const el = document.querySelector(`.msg[data-id="${id}"]`);
   if (el) el.remove();
   msgById.delete(id);
+  renderPinned();
 }
+
+// ---------- الرسالة المثبتة ----------
+function renderPinned() {
+  const bar = $('pinned-bar');
+  const pinned = [...msgById.values()]
+    .filter(m => m.pinned)
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+  if (!pinned.length) {
+    bar.classList.add('hidden');
+    bar.dataset.id = '';
+    return;
+  }
+
+  const m = pinned[0];
+  const text = m.content || (m.file_url ? '📎 ' + fileName(m.file_url) : '');
+  $('pinned-text').textContent = `📌 ${t('pinnedLabel')}: ${text.slice(0, 80)}`;
+  bar.dataset.id = m.id;
+  bar.classList.remove('hidden');
+}
+
+function applyPinnedClass(m) {
+  const el = document.querySelector(`.msg[data-id="${m.id}"]`);
+  if (el) el.classList.toggle('pinned', !!m.pinned);
+}
+
+$('pinned-bar').onclick = () => {
+  const id = $('pinned-bar').dataset.id;
+  const el = document.querySelector(`.msg[data-id="${id}"]`);
+  if (!el) return;
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  el.classList.remove('flash');
+  void el.offsetWidth;
+  el.classList.add('flash');
+};
 
 async function loadMessages() {
   const { data, error } = await sb.from('messages')
@@ -736,6 +820,7 @@ async function loadMessages() {
   $('messages').innerHTML = '';
   msgById = new Map();
   data.forEach(renderMessage);
+  renderPinned();
   scrollBottom();
 }
 
@@ -858,6 +943,11 @@ $('messages').addEventListener('click', e => {
     (m.user_id === currentProfile.id || currentProfile.role === 'admin');
   $('menu-delete').classList.toggle('hidden', !canDelete);
 
+  // زرار التثبيت للأدمن بس
+  const isAdmin = currentProfile && currentProfile.role === 'admin';
+  $('menu-pin').classList.toggle('hidden', !isAdmin);
+  $('menu-pin').textContent = m && m.pinned ? t('unpin') : t('pin');
+
   const r = btn.getBoundingClientRect();
   const menu = $('msg-menu');
   menu.classList.remove('hidden');
@@ -882,6 +972,17 @@ $('menu-copy').onclick = async () => {
 $('menu-search').onclick = () => {
   $('msg-menu').classList.add('hidden');
   openSearch();
+};
+
+$('menu-pin').onclick = async () => {
+  $('msg-menu').classList.add('hidden');
+  const m = msgById.get(menuMsgId);
+  if (!m) return;
+  const { error } = await sb.from('messages').update({ pinned: !m.pinned }).eq('id', m.id);
+  if (error) return alert(t('pinFail') + error.message);
+  m.pinned = !m.pinned;
+  applyPinnedClass(m);
+  renderPinned();
 };
 
 $('menu-delete').onclick = () => {
@@ -985,8 +1086,17 @@ function subscribeToMessages() {
         .maybeSingle();
       if (data) {
         renderMessage(data);
+        renderPinned();
         scrollBottom();
+        if (currentProfile && data.user_id !== currentProfile.id) newMessageAlert(data);
       }
+    })
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages' }, payload => {
+      const m = msgById.get(payload.new.id);
+      if (!m) return;
+      m.pinned = payload.new.pinned;
+      applyPinnedClass(m);
+      renderPinned();
     })
     .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'messages' }, payload => {
       removeMessageEl(payload.old.id);
