@@ -3,6 +3,7 @@
 const gateEl = document.createElement('div');
 gateEl.id = 'room-gate';
 gateEl.className = 'modal hidden';
+gateEl.style.zIndex = '999';
 gateEl.innerHTML = `
   <div class="modal-box">
     <h3 id="gate-title"></h3>
@@ -30,8 +31,6 @@ function gateLabels() {
 
 function showGate() {
   gateLabels();
-  $('gate-err').textContent = '';
-  $('gate-code').value = '';
   gateEl.classList.remove('hidden');
 }
 
@@ -39,24 +38,45 @@ function hideGate() {
   gateEl.classList.add('hidden');
 }
 
+let gateChecking = false;
+
 async function checkRoomGate() {
-  const { data: sess } = await sb.auth.getSession();
-  if (!sess.session) return;
-  const { data, error } = await sb.rpc('has_room_access', { p_room: currentRoom() });
-  if (error) return;
-  if (data === true) hideGate();
-  else showGate();
+  if (gateChecking) return;
+  gateChecking = true;
+  try {
+    const { data: sess } = await sb.auth.getSession();
+    if (!sess.session) {
+      hideGate();
+      return;
+    }
+    const { data, error } = await sb.rpc('has_room_access', { p_room: currentRoom() });
+    if (error) {
+      showGate();
+      $('gate-err').textContent = (lang === 'en' ? 'Check failed: ' : 'في مشكلة في التحقق: ') + error.message;
+      return;
+    }
+    if (data === true) {
+      hideGate();
+    } else {
+      showGate();
+      $('gate-err').textContent = '';
+    }
+  } finally {
+    gateChecking = false;
+  }
 }
 
 $('gate-join').onclick = async () => {
   const code = $('gate-code').value.trim();
   if (!code) return;
+  $('gate-err').textContent = '';
   const { data, error } = await sb.rpc('join_room', { p_room: currentRoom(), p_code: code });
   if (error) {
     $('gate-err').textContent = error.message;
     return;
   }
   if (data === true) {
+    hideGate();
     location.reload();
   } else {
     $('gate-err').textContent = lang === 'en' ? 'Wrong code' : 'الكود غلط';
@@ -121,6 +141,11 @@ function renderCodesAdmin() {
 
 $('set-admin').addEventListener('click', () => setTimeout(renderCodesAdmin, 0));
 
+// ---------- التشغيل ----------
+// أول ما الصفحة تفتح (لو الحساب متسجل من قبل)
+setTimeout(checkRoomGate, 500);
+
+// بعد تسجيل الدخول أو إنشاء الحساب
 sb.auth.onAuthStateChange((event, session) => {
   if (session) setTimeout(checkRoomGate, 300);
   else hideGate();
