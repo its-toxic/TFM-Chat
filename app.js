@@ -261,6 +261,8 @@ function setAuthMode(mode) {
   $('auth-submit').textContent = mode === 'login' ? t('login') : t('createAccount');
   $('forgot-btn').classList.toggle('hidden', mode !== 'login');
   $('signup-box').classList.toggle('hidden', mode !== 'signup');
+  // جملة شروط الباسورد تظهر بس في إنشاء الحساب
+  $('pw-hint').classList.toggle('hidden', mode !== 'signup');
   setMsg('auth-msg', '');
 }
 
@@ -521,17 +523,20 @@ $('set-logout').onclick = () => {
 };
 
 // ---------- خلفية الشات ----------
+// المفتاح اتغير عشان الخلفية القديمة المحفوظة (الزرقا) ما تتطبقش تاني
+const BG_KEY = 'chatBg_v2';
+
 const BG_PRESETS = [
-  'linear-gradient(135deg, #3f0410, #161436)',
-  'linear-gradient(135deg, #1c1a4a, #0c0b22)',
-  'linear-gradient(135deg, #0f3d33, #0c0b22)',
-  'linear-gradient(135deg, #5a0a1c, #2b2a6e)',
+  '#ffffff',
+  '#000000',
   'linear-gradient(135deg, #ffd0db, #ffb3c4)',
-  '#ffffff'
+  'linear-gradient(135deg, #3f0410, #6e0819)',
+  'linear-gradient(135deg, #9b0f26, #3f0410)',
+  '#2a0812'
 ];
 
 function readBg() {
-  try { return localStorage.getItem('chatBg'); } catch { return null; }
+  try { return localStorage.getItem(BG_KEY); } catch { return null; }
 }
 
 function applyBg() {
@@ -551,7 +556,7 @@ function applyBg() {
 
 function saveBg(value) {
   try {
-    localStorage.setItem('chatBg', value);
+    localStorage.setItem(BG_KEY, value);
   } catch (e) {
     alert(t('bgFail') + e.message);
     return false;
@@ -601,7 +606,7 @@ $('bg-close').onclick = () => $('bg-modal').classList.add('hidden');
 $('bg-upload').onclick = () => $('bg-input').click();
 
 $('bg-reset').onclick = () => {
-  try { localStorage.removeItem('chatBg'); } catch {}
+  try { localStorage.removeItem(BG_KEY); } catch {}
   applyBg();
   $('bg-modal').classList.add('hidden');
 };
@@ -801,182 +806,4 @@ $('messages').addEventListener('click', e => {
   menu.style.left = Math.max(8, r.left - 110) + 'px';
 });
 
-document.addEventListener('click', () => $('msg-menu').classList.add('hidden'));
-$('msg-menu').addEventListener('click', e => e.stopPropagation());
-
-$('menu-copy').onclick = async () => {
-  const m = msgById.get(menuMsgId);
-  $('msg-menu').classList.add('hidden');
-  if (!m) return;
-  try {
-    await navigator.clipboard.writeText(m.content || m.file_url || '');
-  } catch {
-    alert(t('copyFail'));
-  }
-};
-
-$('menu-search').onclick = () => {
-  $('msg-menu').classList.add('hidden');
-  openSearch();
-};
-
-$('menu-delete').onclick = () => {
-  $('msg-menu').classList.add('hidden');
-  if (menuMsgId) deleteMessage(menuMsgId);
-};
-
-async function deleteMessage(id) {
-  if (!confirm(t('deleteAsk'))) return;
-  const { error } = await sb.from('messages').delete().eq('id', id);
-  if (error) return alert(t('deleteFail') + error.message);
-  removeMessageEl(id);
-}
-
-// ---------- البحث ----------
-function openSearch() {
-  $('search-bar').classList.remove('hidden');
-  $('search-input').focus();
-}
-
-function closeSearch() {
-  $('search-bar').classList.add('hidden');
-  $('search-input').value = '';
-  filterMessages('');
-}
-
-function filterMessages(q) {
-  q = q.trim().toLowerCase();
-  document.querySelectorAll('#messages .msg').forEach(el => {
-    el.style.display = !q || el.textContent.toLowerCase().includes(q) ? '' : 'none';
-  });
-}
-
-$('search-close').onclick = closeSearch;
-$('search-input').addEventListener('input', e => filterMessages(e.target.value));
-
-// ---------- السجل ----------
-$('history-close').onclick = () => $('history-modal').classList.add('hidden');
-
-document.querySelectorAll('.tab').forEach(tb => {
-  tb.onclick = () => {
-    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
-    tb.classList.add('active');
-    activeTab = tb.dataset.tab;
-    renderHistory();
-  };
-});
-
-function renderHistory() {
-  const list = $('history-list');
-  list.innerHTML = '';
-  const items = [];
-
-  for (const m of msgById.values()) {
-    const who = m.profiles?.display_name || '?';
-    const date = new Date(m.created_at);
-
-    if (activeTab === 'links') {
-      extractLinks(m.content).forEach(u => items.push({ title: u, url: u, who, date }));
-    } else if (activeTab === 'docs') {
-      if (m.file_url && !isMediaType(m.file_type))
-        items.push({ title: '📄 ' + fileName(m.file_url), url: m.file_url, who, date });
-    } else if (m.file_url && isMediaType(m.file_type)) {
-      const tp = m.file_type;
-      const title = tp.startsWith('image/') ? '🖼️ ' + t('image')
-                  : tp.startsWith('audio/') ? '🎙️ ' + t('audio') : '🎬 ' + t('video');
-      items.push({ title, url: m.file_url, who, date });
-    }
-  }
-
-  items.sort((a, b) => b.date - a.date);
-
-  if (!items.length) {
-    list.innerHTML = `<p class="empty">${t('noRows')}</p>`;
-    return;
-  }
-
-  items.forEach(it => {
-    const a = document.createElement('a');
-    a.href = it.url;
-    a.target = '_blank';
-    a.className = 'hist-item';
-    a.innerHTML = `<b>${esc(it.title)}</b><span>${esc(it.who)} · ${it.date.toLocaleString(lang === 'ar' ? 'ar-EG' : 'en-US')}</span>`;
-    list.appendChild(a);
-  });
-}
-
-// ---------- الوقت الفعلي ----------
-function subscribeToMessages() {
-  if (subscribed) return;
-  subscribed = true;
-
-  sb.channel('messages-channel')
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, async payload => {
-      // نعرض بس الرسايل اللي في الشعبة والمستوى اللي اخترته
-      if (payload.new.room !== currentRoom()) return;
-
-      const { data } = await sb.from('messages')
-        .select('*, profiles(display_name, avatar_url)')
-        .eq('id', payload.new.id)
-        .maybeSingle();
-      if (data) {
-        renderMessage(data);
-        scrollBottom();
-      }
-    })
-    .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'messages' }, payload => {
-      removeMessageEl(payload.old.id);
-    })
-    .subscribe();
-}
-
-// ---------- لوحة الأدمن ----------
-async function loadUsers() {
-  const { data, error } = await sb.from('profiles').select('*').order('created_at');
-  if (error) return alert(error.message);
-
-  const box = $('users-list');
-  box.innerHTML = '';
-
-  data.forEach(p => {
-    const row = document.createElement('div');
-    row.className = 'user-row';
-    row.innerHTML = `<span>${esc(p.display_name || p.id.slice(0, 8))}${p.is_banned ? ' 🚫' : ''}</span>`;
-
-    const sel = document.createElement('select');
-    ['admin', 'sender', 'viewer'].forEach(r => {
-      const opt = document.createElement('option');
-      opt.value = r;
-      opt.textContent = r;
-      if (r === p.role) opt.selected = true;
-      sel.appendChild(opt);
-    });
-
-    sel.onchange = async () => {
-      const { error } = await sb.from('profiles').update({ role: sel.value }).eq('id', p.id);
-      if (error) alert(error.message);
-      else await loadUsers();
-    };
-
-    row.appendChild(sel);
-
-    if (!currentProfile || p.id !== currentProfile.id) {
-      const kb = document.createElement('button');
-      kb.textContent = p.is_banned ? t('unkick') : t('kick');
-      kb.className = p.is_banned ? 'ghost' : 'danger-btn';
-      kb.onclick = async () => {
-        const { error } = await sb.from('profiles').update({ is_banned: !p.is_banned }).eq('id', p.id);
-        if (error) alert(error.message);
-        else await loadUsers();
-      };
-      row.appendChild(kb);
-    }
-
-    box.appendChild(row);
-  });
-}
-
-// ---------- بدء التطبيق ----------
-applyRoomUI();
-applyBg();
-applyI18n();
+document.addEventListener('click', () => $('

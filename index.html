@@ -8,7 +8,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="logo.png">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=2">
 </head>
 <body>
 
@@ -50,7 +50,7 @@
 
       <input id="email" type="email" data-i18n-ph="email" dir="ltr">
       <input id="password" type="password" data-i18n-ph="password" dir="ltr">
-      <p class="hint" data-i18n="pwRule"></p>
+      <p id="pw-hint" class="hint hidden" data-i18n="pwRule"></p>
 
       <div id="signup-box" class="signup-box hidden">
         <p class="hint" data-i18n="chooseAvatarSignup"></p>
@@ -226,6 +226,6 @@
     }
   </script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="app.js"></script>
+  <script src="app.js?v=2"></script>
 </body>
 </html>
