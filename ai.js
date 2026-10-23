@@ -1,5 +1,7 @@
 // ---------- فاهم: مساعد الذكاء الاصطناعي (ومساعد الدكتور للأدمن) ----------
 
+// اسم وظيفة الذكاء الاصطناعي في Supabase: الموقع الأساسي ai-chat، والتجريبي ai-chat-test
+const AI_FUNCTION = 'ai-chat';
 const AI_ICON = '<img src="ai-icon.png" alt="">';
 const AI_MAX_FILE = 5 * 1024 * 1024;
 const AI_BOOK_MAX = 50 * 1024 * 1024;
@@ -295,6 +297,55 @@ function greetingText() {
   return 'أهلا وسهلا معاك فاهم 🤖\nكلمني بالمصري أو بالإنجليزي أو أي لغة. أقدر أشرح وأحل وأبحث على النت، وأرد عليك من كتب المادة، ولو بعتلي صورة أقدر أحللها أو أعدّلها لك.';
 }
 
+// اقتراحات أسئلة جاهزة تظهر في الشات الفاضي (3 عشوائيين)
+const AI_SUGGESTIONS = {
+  ar: [
+    'اشرح لي مفهوم العرض والطلب بمثال بسيط',
+    'ازاي أحسب نسبة الربح من التكلفة؟',
+    'لخصلي أهم نقط في محاسبة التكاليف',
+    'اديني 5 أسئلة مراجعة على أي مادة',
+    'اشرح الفرق بين الأصول والخصوم',
+    'ازاي أكتب سيرة ذاتية قوية؟',
+    'اعملي جدول مذاكرة لأسبوع امتحانات',
+    'اشرح لي الميزانية العمومية ببساطة',
+  ],
+  en: [
+    'Explain supply and demand with a simple example',
+    'How do I calculate profit margin from cost?',
+    'Summarize the key points of cost accounting',
+    'Give me 5 review questions on any subject',
+    'Explain the difference between assets and liabilities',
+    'Help me write a strong CV',
+    'Make a one-week study plan for exams',
+    'Explain the balance sheet simply',
+  ],
+};
+
+function aiRandomSuggestions(n = 3) {
+  const pool = [...(aiLangMode === 'en' ? AI_SUGGESTIONS.en : AI_SUGGESTIONS.ar)];
+  const out = [];
+  while (out.length < n && pool.length) {
+    out.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
+  }
+  return out;
+}
+
+function appendAiSuggestions() {
+  const box = $('ai-messages');
+  const wrap = document.createElement('div');
+  wrap.className = 'ai-suggest';
+  aiRandomSuggestions(3).forEach(q => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'ai-chip';
+    b.textContent = q;
+    // بيحط السؤال في خانة الكتابة، والطالب يبعته بنفسه
+    b.onclick = () => { $('ai-input').value = q; $('ai-input').focus(); };
+    wrap.appendChild(b);
+  });
+  box.appendChild(wrap);
+}
+
 function appendAiBubble(role, text, extra = '') {
   const box = $('ai-messages');
   const div = document.createElement('div');
@@ -339,6 +390,7 @@ async function renderAiHistory() {
 
   if (!data || !data.length) {
     appendAiBubble('model', greetingText());
+    appendAiSuggestions();
     return;
   }
 
@@ -404,7 +456,7 @@ async function aiSend(fromVoice = false) {
     const token = sess.session ? sess.session.access_token : null;
     if (!token) throw new Error(aiLangMode === 'en' ? 'Please log in again' : 'سجّل دخول تاني');
 
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/ai-chat`, {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/${AI_FUNCTION}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -629,6 +681,27 @@ $('ai-lang').onclick = async () => {
   await renderAiHistory();
 };
 
+// أعد الرد: بيمسح آخر رد ويبعت آخر سؤال تاني
+$('ai-regen').onclick = async () => {
+  if (aiBusy || !aiRoom) return;
+  const { data, error } = await sb.from('ai_messages')
+    .select('id, role, content')
+    .eq('room', aiRoom)
+    .order('id', { ascending: false })
+    .limit(2);
+  if (error) return alert(error.message);
+  const [last, prev] = data || [];
+  if (!last || last.role !== 'model' || !prev || prev.role !== 'user') {
+    return alert(aiLangMode === 'en' ? 'Nothing to regenerate yet' : 'مفيش رد أقدر أعيده دلوقتي');
+  }
+  const { error: delErr } = await sb.from('ai_messages').delete().in('id', [last.id, prev.id]);
+  if (delErr) return alert(delErr.message);
+  const question = prev.content.replace(/ \[ملف: .*\]$/, '').trim();
+  await renderAiHistory();
+  $('ai-input').value = question;
+  aiSend(false);
+};
+
 $('ai-clear').onclick = async () => {
   if (!aiRoom) return;
   if (!confirm(aiLangMode === 'en' ? 'Clear this chat?' : 'تمسح المحادثة دي؟')) return;
@@ -692,6 +765,9 @@ sb.auth.onAuthStateChange((event, session) => {
 (function injectVoiceStyle() {
   const st = document.createElement('style');
   st.textContent = `
+    .ai-suggest { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0 12px; }
+    .ai-chip { border: 1px solid #6e0819; background: transparent; color: #6e0819; border-radius: 16px; padding: 7px 12px; font-size: 14px; cursor: pointer; text-align: start; }
+    .ai-chip:active { background: #6e0819; color: #fff; }
     .ai-status { font-size: 13px; padding: 6px 14px; text-align: center; }
     .ai-status.listen { color: #6e0819; font-weight: bold; }
     .ai-status.think { opacity: .75; }
