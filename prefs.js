@@ -1,14 +1,8 @@
-// ---------- تفضيلات: الوضع الداكن، حجم الخط، تثبيت التطبيق ----------
+// ---------- تفضيلات: الوضع الداكن، حجم الخط، الصوت، تصدير المحادثة، تثبيت التطبيق ----------
+// ملاحظة: الوضع الداكن/الفاتح بيتحكم فيه app.js (متغير theme ودالة toggleTheme)، فهنا بس بنربط الزرار بيه
 (function () {
-  const KEY_THEME = 'tfm_theme';   // system | light | dark
-  const KEY_FONT = 'tfm_font';     // small | normal | large | xlarge
-
-  const THEMES = ['system', 'light', 'dark'];
-  const THEME_LABEL = {
-    system: { ar: 'الوضع: تلقائي', en: 'Theme: auto' },
-    light: { ar: 'الوضع: فاتح', en: 'Theme: light' },
-    dark: { ar: 'الوضع: داكن', en: 'Theme: dark' },
-  };
+  const KEY_FONT = 'tfm_font';        // small | normal | large | xlarge
+  const KEY_SOUND = 'notifySound';    // on | off (app.js بيقرأه في playBeep)
 
   const FONTS = [
     { key: 'small', zoom: '0.92', ar: 'صغير', en: 'Small' },
@@ -32,60 +26,34 @@
     return list[(i + 1) % list.length];
   }
 
-  // ستايل الوضع الداكن للأجزاء الأساسية
-  const DARK_CSS = `
-    html[data-theme="dark"] .screen,
-    html[data-theme="dark"] .card,
-    html[data-theme="dark"] .modal-box,
-    html[data-theme="dark"] .members-panel,
-    html[data-theme="dark"] header,
-    html[data-theme="dark"] .composer,
-    html[data-theme="dark"] .ai-screen,
-    html[data-theme="dark"] .ai-head,
-    html[data-theme="dark"] .ai-composer {
-      background-color: #16161b;
-      color: #f1f1f3;
-    }
-    html[data-theme="dark"] input,
-    html[data-theme="dark"] textarea,
-    html[data-theme="dark"] select {
-      background-color: #22222a;
-      color: #f1f1f3;
-      border-color: #3a3a44;
-    }
-    html[data-theme="dark"] .set-item {
-      background-color: #22222a;
-      color: #f1f1f3;
-    }
-  `;
-
-  const st = document.createElement('style');
-  st.textContent = DARK_CSS;
-  document.head.appendChild(st);
-
-  // الوضع التلقائي بيتبع إعداد الجهاز
-  const systemDark = window.matchMedia('(prefers-color-scheme: dark)');
-
-  function applyTheme() {
-    const pref = getPref(KEY_THEME, 'system');
-    const dark = pref === 'dark' || (pref === 'system' && systemDark.matches);
-    document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+  // ---------- حجم الخط ----------
+  function currentFont() {
+    return FONTS.find(x => x.key === getPref(KEY_FONT, 'normal')) || FONTS[1];
   }
 
   function applyFont() {
-    const key = getPref(KEY_FONT, 'normal');
-    const f = FONTS.find(x => x.key === key) || FONTS[1];
     // zoom بيكبّر كل النصوص حتى اللي مكتوبة بـ px
-    document.body.style.zoom = f.zoom;
+    document.body.style.zoom = currentFont().zoom;
   }
 
+  // ---------- العناوين ----------
   function refreshLabels() {
-    const t = getPref(KEY_THEME, 'system');
-    const f = FONTS.find(x => x.key === getPref(KEY_FONT, 'normal')) || FONTS[1];
     const th = el('set-theme');
-    if (th) th.textContent = THEME_LABEL[t][isEn() ? 'en' : 'ar'];
+    if (th) th.textContent = txt(
+      'الوضع: ' + (theme === 'dark' ? 'داكن' : 'فاتح'),
+      'Theme: ' + (theme === 'dark' ? 'dark' : 'light'));
+
     const fb = el('set-font');
-    if (fb) fb.textContent = txt('حجم الخط: ' + f.ar, 'Font size: ' + f.en);
+    if (fb) fb.textContent = txt('حجم الخط: ' + currentFont().ar, 'Font size: ' + currentFont().en);
+
+    const sb = el('set-sound');
+    if (sb) sb.textContent = txt(
+      'صوت الإشعارات: ' + (getPref(KEY_SOUND, 'on') === 'off' ? 'مقفول' : 'شغال'),
+      'Notification sound: ' + (getPref(KEY_SOUND, 'on') === 'off' ? 'off' : 'on'));
+
+    const ex = el('set-export');
+    if (ex) ex.textContent = txt('📥 تصدير المحادثة', '📥 Export chat');
+
     const ins = el('set-install');
     if (ins) ins.hidden = isStandalone();
   }
@@ -117,7 +85,6 @@
       deferredPrompt = null;
       return refreshLabels();
     }
-    // iPhone أو متصفح ما بيدعمش الزرار المباشر
     const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
     alert(isIOS
       ? txt(
@@ -128,10 +95,35 @@
         'On Android (Chrome): tap ⋮ at the top right, then "Install app" or "Add to Home screen".'));
   }
 
+  // ---------- تصدير المحادثة (الرسايل المحمّلة في الشاشة) ----------
+  function exportChat() {
+    if (typeof msgById === 'undefined' || !msgById.size) {
+      return alert(txt('مفيش رسايل تتصدّر', 'No messages to export'));
+    }
+    const rows = [...msgById.values()]
+      .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+      .map(m => {
+        const who = m.profiles?.display_name || '?';
+        const when = new Date(m.created_at).toLocaleString(isEn() ? 'en-US' : 'ar-EG');
+        const body = m.content || (m.file_url ? `[${m.file_url}]` : '');
+        return `[${when}] ${who}: ${body}`;
+      });
+
+    const blob = new Blob([`TFM Chat - ${currentRoom()}\n\n` + rows.join('\n')], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `tfm-chat-${currentRoom()}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
   // ---------- الأحداث ----------
   el('set-theme')?.addEventListener('click', () => {
-    setPref(KEY_THEME, nextOf(THEMES, getPref(KEY_THEME, 'system')));
-    applyTheme();
+    el('settings-modal')?.classList.add('hidden');
+    toggleTheme(); // دالة app.js: بتبدّل الوضع وبتحفظه
     refreshLabels();
   });
 
@@ -142,11 +134,21 @@
     refreshLabels();
   });
 
+  el('set-sound')?.addEventListener('click', () => {
+    setPref(KEY_SOUND, getPref(KEY_SOUND, 'on') === 'off' ? 'on' : 'off');
+    refreshLabels();
+  });
+
+  el('set-export')?.addEventListener('click', () => {
+    el('settings-modal')?.classList.add('hidden');
+    exportChat();
+  });
+
   el('set-install')?.addEventListener('click', installApp);
 
-  systemDark.addEventListener?.('change', applyTheme);
+  // بعد أي تغيير لغة أو وضع، نحدّث العناوين
+  document.addEventListener('click', () => setTimeout(refreshLabels, 0));
 
-  applyTheme();
   applyFont();
   refreshLabels();
 })();

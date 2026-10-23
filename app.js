@@ -593,6 +593,14 @@ async function loadMembers() {
     const banned = p.is_banned && currentProfile && currentProfile.role === 'admin' ? ' 🚫' : '';
 
     row.innerHTML = `${avatar}<div class="member-info"><b>${esc(name)}${banned}</b><span class="role-tag">${t(ROLE_KEYS[p.role] || 'roleViewer')}</span></div>`;
+    const mb = document.createElement('button');
+    mb.type = 'button';
+    mb.className = 'ghost';
+    mb.textContent = '📜';
+    mb.title = lang === 'en' ? 'Messages in this room' : 'رسايله في الشعبة دي';
+    mb.onclick = () => showUserMessages(p.id, name);
+    row.appendChild(mb);
+
     box.appendChild(row);
   };
 
@@ -685,6 +693,7 @@ $('set-notify').onclick = async () => {
 };
 
 function playBeep() {
+  try { if (localStorage.getItem('notifySound') === 'off') return; } catch {}
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
     const o = ctx.createOscillator();
@@ -1691,6 +1700,39 @@ async function loadUsers() {
 
     box.appendChild(row);
   });
+}
+
+// أي حد يشوف رسايل عضو تاني في الشعبة والمستوى الحالي بس (الرسايل اللي هو أصلاً شايفها)
+function showUserMessages(userId, name) {
+  const list = $('history-list');
+  list.innerHTML = '';
+
+  const mine = [...msgById.values()]
+    .filter(m => m.user_id === userId)
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+  const head = document.createElement('p');
+  head.className = 'empty';
+  head.textContent = (lang === 'en' ? 'Messages by ' : 'رسايل ') + name + ` (${mine.length}) · ${currentRoom()}`;
+  list.appendChild(head);
+
+  if (!mine.length) {
+    const none = document.createElement('p');
+    none.className = 'empty';
+    none.textContent = t('noRows');
+    list.appendChild(none);
+  }
+
+  mine.forEach(m => {
+    const a = document.createElement('div');
+    a.className = 'hist-item';
+    const text = m.content || (m.file_url ? '📎 ' + fileName(m.file_url) : '');
+    a.innerHTML = `<b>${esc(text.slice(0, 200))}</b><span>${new Date(m.created_at).toLocaleString(lang === 'ar' ? 'ar-EG' : 'en-US')}</span>`;
+    list.appendChild(a);
+  });
+
+  $('members-panel').classList.add('hidden');
+  $('history-modal').classList.remove('hidden');
 }
 
 // ---------- زرار إظهار/إخفاء الباسورد ----------
