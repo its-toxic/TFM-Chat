@@ -910,6 +910,14 @@ function applyReact(kind, id, emoji, userId) {
   id = Number(id);
   if (!reactMap.has(id)) reactMap.set(id, new Map());
   const byEmoji = reactMap.get(id);
+
+  // رياكت واحد بس لكل شخص على الرسالة
+  if (kind === 'add') {
+    for (const [em, users] of [...byEmoji]) {
+      if (em !== emoji && users.delete(userId) && !users.size) byEmoji.delete(em);
+    }
+  }
+
   if (!byEmoji.has(emoji)) byEmoji.set(emoji, new Set());
   const set = byEmoji.get(emoji);
   if (kind === 'add') set.add(userId);
@@ -937,21 +945,37 @@ function paintReacts(id) {
 
 async function toggleReact(id, emoji) {
   if (!currentProfile) return;
-  const users = reactMap.get(Number(id))?.get(emoji);
-  const mineOn = !!(users && users.has(currentProfile.id));
+  id = Number(id);
+  const me = currentProfile.id;
 
-  if (mineOn) {
+  // رياكتي الحالي على الرسالة دي (لو موجود)
+  let current = null;
+  const byEmoji = reactMap.get(id);
+  if (byEmoji) byEmoji.forEach((users, em) => { if (users.has(me)) current = em; });
+
+  // نفس الإيموجي: نشيله
+  if (current === emoji) {
     const { error } = await sb.from('reactions')
       .delete()
-      .match({ message_id: id, user_id: currentProfile.id, emoji });
+      .match({ message_id: id, user_id: me, emoji });
     if (error) return alert(t('reactFail') + error.message);
-    applyReact('del', id, emoji, currentProfile.id);
-  } else {
-    const { error } = await sb.from('reactions')
-      .insert({ message_id: id, user_id: currentProfile.id, emoji });
-    if (error) return alert(t('reactFail') + error.message);
-    applyReact('add', id, emoji, currentProfile.id);
+    applyReact('del', id, emoji, me);
+    return;
   }
+
+  // إيموجي تاني: نشيل القديم الأول (رياكت واحد بس)
+  if (current) {
+    const { error } = await sb.from('reactions')
+      .delete()
+      .match({ message_id: id, user_id: me, emoji: current });
+    if (error) return alert(t('reactFail') + error.message);
+    applyReact('del', id, current, me);
+  }
+
+  const { error } = await sb.from('reactions')
+    .insert({ message_id: id, user_id: me, emoji });
+  if (error) return alert(t('reactFail') + error.message);
+  applyReact('add', id, emoji, me);
 }
 
 async function loadReactions(ids) {
@@ -1226,12 +1250,32 @@ function openMenu(btn) {
   $('menu-edit').classList.toggle('hidden', !(mine && m && !m.file_url));
   $('menu-reply').classList.toggle('hidden', !canSend());
 
-  const r = btn.getBoundingClientRect();
   const menu = $('msg-menu');
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const gap = 8;
+
+  // نظهرها مخفية الأول عشان نقيس حجمها الحقيقي
+  menu.style.visibility = 'hidden';
+  menu.style.maxHeight = (vh - gap * 2) + 'px';
+  menu.style.overflowY = 'auto';
   menu.classList.remove('hidden');
-  const left = Math.min(Math.max(8, r.left - 110), window.innerWidth - 200);
-  menu.style.top = (r.bottom + 4) + 'px';
-  menu.style.left = Math.max(8, left) + 'px';
+
+  const r = btn.getBoundingClientRect();
+  const mw = menu.offsetWidth;
+  const mh = menu.offsetHeight;
+
+  let left = r.left;
+  if (left + mw > vw - gap) left = vw - mw - gap;
+  if (left < gap) left = gap;
+
+  let top = r.bottom + 4;
+  if (top + mh > vh - gap) top = r.top - mh - 4;       // مفيش مكان تحت: نفتحها فوق الزرار
+  if (top < gap) top = Math.max(gap, vh - mh - gap);   // مفيش مكان فوق كمان: نلزقها في آخر الشاشة
+
+  menu.style.left = left + 'px';
+  menu.style.top = top + 'px';
+  menu.style.visibility = '';
 }
 
 $('messages').addEventListener('click', e => {
@@ -1253,7 +1297,7 @@ $('messages').addEventListener('click', e => {
   openMenu(btn);
 });
 
-// صف الإيموجي جوه القايمة
+// صف الإيموجي جوه القايمة + زرار ➕ لاختيار أي إيموجي
 const emoRow = $('menu-emojis');
 EMOJIS.forEach(em => {
   const b = document.createElement('button');
@@ -1262,12 +1306,147 @@ EMOJIS.forEach(em => {
   b.dataset.emoji = em;
   emoRow.appendChild(b);
 });
+const moreBtn = document.createElement('button');
+moreBtn.type = 'button';
+moreBtn.textContent = '➕';
+moreBtn.dataset.more = '1';
+emoRow.appendChild(moreBtn);
+
 emoRow.addEventListener('click', e => {
   const b = e.target.closest('button');
   if (!b) return;
   $('msg-menu').classList.add('hidden');
+  if (b.dataset.more) {
+    if (menuMsgId) openEmojiPicker(menuMsgId);
+    return;
+  }
   if (menuMsgId) toggleReact(menuMsgId, b.dataset.emoji);
 });
+
+// ---------- لوحة اختيار أي إيموجي ----------
+const EMOJI_CATS = [
+  { icon: '😀', list: '😀 😃 😄 😁 😆 😅 🤣 😂 🙂 🙃 😉 😊 😇 🥰 😍 🤩 😘 😗 😚 😙 🥲 😋 😛 😜 🤪 😝 🤑 🤗 🤭 🤫 🤔 🤐 🤨 😐 😑 😶 😏 😒 🙄 😬 🤥 😌 😔 😪 🤤 😴 😷 🤒 🤕 🤢 🤮 🤧 🥵 🥶 🥴 😵 🤯 🤠 🥳 🥸 😎 🤓 🧐 😕 😟 🙁 😮 😯 😲 😳 🥺 😦 😧 😨 😰 😥 😢 😭 😱 😖 😣 😞 😓 😩 😫 🥱 😤 😡 😠 🤬 😈 👿 💀 💩 🤡 👻 👽 👾 🤖' },
+  { icon: '👍', list: '👍 👎 👊 ✊ 🤛 🤜 👏 🙌 👐 🤲 🤝 🙏 ✌️ 🤞 🤟 🤘 👌 🤌 🤏 👈 👉 👆 👇 ☝️ ✋ 🤚 🖐️ 🖖 👋 🤙 💪 🦾 ✍️ 💅 👀 🧠 👑 💍' },
+  { icon: '❤️', list: '❤️ 🧡 💛 💚 💙 💜 🖤 🤍 🤎 💔 ❣️ 💕 💞 💓 💗 💖 💘 💝 💟 😻 🥰 😍 💋 💌 🌹 🌸 🌷 🌻' },
+  { icon: '🔥', list: '🔥 ✨ ⭐ 🌟 💫 ⚡ 💥 💢 💦 💨 🎉 🎊 🎈 🎁 🏆 🥇 🥈 🥉 ⚽ 🏀 🎮 🎯 🎵 🎶 📚 📖 ✏️ 📝 💡 📌 📎 💯 ✅ ❌ ❗ ❓ ⭕ 🚫 💬 🔔 🔒 🔑 📱 💻 🎓' },
+  { icon: '🐶', list: '🐶 🐱 🐭 🐹 🐰 🦊 🐻 🐼 🐨 🐯 🦁 🐮 🐷 🐸 🐵 🙈 🙉 🙊 🐔 🐧 🐦 🦄 🐝 🦋 🐢 🐙 🦈 🐳 🌈 ☀️ 🌙 ☁️ ❄️ 🌊 🍕 🍔 🍟 🌭 🍿 🍩 🍪 🎂 ☕ 🍵 🥤 🍉 🍓 🍎 🥑 🍫' }
+].map(c => ({ icon: c.icon, items: c.list.split(' ') }));
+
+let emojiPop = null;
+let emojiTargetId = null;
+
+function pickFirstEmoji(text) {
+  const str = (text || '').trim();
+  if (!str) return null;
+  let first;
+  if (window.Intl && Intl.Segmenter) {
+    const it = new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(str)[Symbol.iterator]().next();
+    first = it.done ? null : it.value.segment;
+  } else {
+    first = Array.from(str)[0];
+  }
+  if (!first) return null;
+  const isEmoji = /\p{Extended_Pictographic}|\p{Regional_Indicator}|[0-9#*]\uFE0F?\u20E3/u.test(first);
+  return isEmoji ? first : null;
+}
+
+function closeEmojiPicker() {
+  if (emojiPop) emojiPop.classList.add('hidden');
+  emojiTargetId = null;
+}
+
+function chooseEmoji(em) {
+  const id = emojiTargetId;
+  closeEmojiPicker();
+  if (id && em) toggleReact(id, em);
+}
+
+function buildEmojiPicker() {
+  emojiPop = document.createElement('div');
+  emojiPop.className = 'emoji-pop hidden';
+  emojiPop.addEventListener('click', e => {
+    if (e.target === emojiPop) closeEmojiPicker();
+  });
+
+  const box = document.createElement('div');
+  box.className = 'emoji-box';
+
+  const head = document.createElement('div');
+  head.className = 'emoji-head';
+  const title = document.createElement('b');
+  title.className = 'emoji-title';
+  const close = document.createElement('button');
+  close.type = 'button';
+  close.className = 'ghost';
+  close.textContent = '✕';
+  close.onclick = closeEmojiPicker;
+  head.appendChild(title);
+  head.appendChild(close);
+
+  const tabs = document.createElement('div');
+  tabs.className = 'emoji-tabs';
+  const grid = document.createElement('div');
+  grid.className = 'emoji-grid';
+
+  const showCat = idx => {
+    [...tabs.children].forEach((b, i) => b.classList.toggle('on', i === idx));
+    grid.innerHTML = '';
+    EMOJI_CATS[idx].items.forEach(em => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = em;
+      b.onclick = () => chooseEmoji(em);
+      grid.appendChild(b);
+    });
+    grid.scrollTop = 0;
+  };
+
+  EMOJI_CATS.forEach((c, i) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = c.icon;
+    b.onclick = () => showCat(i);
+    tabs.appendChild(b);
+  });
+
+  const custom = document.createElement('div');
+  custom.className = 'emoji-custom';
+  const inp = document.createElement('input');
+  inp.type = 'text';
+  inp.className = 'emoji-input';
+  const ok = document.createElement('button');
+  ok.type = 'button';
+  ok.className = 'primary';
+  ok.textContent = '✓';
+  const submitCustom = () => {
+    const em = pickFirstEmoji(inp.value);
+    if (!em) return alert(lang === 'en' ? 'Enter a valid emoji' : 'اكتب إيموجي صحيح');
+    inp.value = '';
+    chooseEmoji(em);
+  };
+  ok.onclick = submitCustom;
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') submitCustom(); });
+  custom.appendChild(inp);
+  custom.appendChild(ok);
+
+  box.appendChild(head);
+  box.appendChild(tabs);
+  box.appendChild(grid);
+  box.appendChild(custom);
+  emojiPop.appendChild(box);
+  document.body.appendChild(emojiPop);
+
+  emojiPop._showCat = showCat;
+}
+
+function openEmojiPicker(msgId) {
+  if (!emojiPop) buildEmojiPicker();
+  emojiTargetId = msgId;
+  emojiPop.querySelector('.emoji-title').textContent = lang === 'en' ? 'Pick an emoji' : 'اختار إيموجي';
+  emojiPop.querySelector('.emoji-input').placeholder = lang === 'en' ? 'Type or paste any emoji' : 'اكتب أو الصق أي إيموجي';
+  emojiPop._showCat(0);
+  emojiPop.classList.remove('hidden');
+}
 
 document.addEventListener('click', () => $('msg-menu').classList.add('hidden'));
 $('msg-menu').addEventListener('click', e => e.stopPropagation());

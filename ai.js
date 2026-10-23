@@ -20,9 +20,38 @@ function aiIsDoctor() {
   return !!currentProfile && currentProfile.role === 'admin';
 }
 
-// الاسم بالعربي والإنجليزي: فاهم للطلاب، ومساعد الدكتور للأدمن
+// وضع الامتحان: بيتفعل بالعبارة دي (للأدمن بس) وبيتقفل بعبارة الإيقاف
+const EXAM_ON = 'تفعيل تسجيل الامتحان';
+const EXAM_OFF = 'إيقاف وضع الامتحان';
+let aiExamMode = false;
+
+function aiNorm(s) {
+  return String(s || '')
+    .toLowerCase()
+    .replace(/[\u064B-\u0652\u0640]/g, '')
+    .replace(/[إأآ]/g, 'ا')
+    .replace(/ى/g, 'ي')
+    .replace(/ة/g, 'ه')
+    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+    .replace(/\s+/g, ' ');
+}
+
+function aiScanExam(texts, start = false) {
+  if (!aiIsDoctor()) return false;
+  let on = start;
+  const onN = aiNorm(EXAM_ON);
+  const offN = aiNorm(EXAM_OFF);
+  for (const x of texts) {
+    const n = aiNorm(x);
+    if (n.includes(offN)) on = false;
+    else if (n.includes(onN)) on = true;
+  }
+  return on;
+}
+
+// الاسم بالعربي والإنجليزي: فاهم، ولما وضع الامتحان يتفعل يبقى مساعد الدكتور
 function aiNames() {
-  return aiIsDoctor()
+  return aiExamMode
     ? { ar: 'مساعد الدكتور', en: 'Doctor Assistant' }
     : { ar: 'فاهم', en: 'Fahem' };
 }
@@ -44,15 +73,13 @@ function greetingText() {
     ? '\n\n⚠️ Note: this chat is deleted if you leave it for one hour without sending any message.'
     : '\n\n⚠️ ملحوظة: الشات ده هيتمسح لو طلعت برا الشات لمدة ساعة من غير ما تبعت أي رسالة.';
 
-  if (aiIsDoctor()) {
-    return (aiLangMode === 'en'
-      ? 'Hello Doctor! I\'m your Doctor Assistant 🤖\nI can explain, search the web, review images, and answer from the course books.\nTo start preparing an exam, write: "تفعيل تسجيل الامتحان"'
-      : 'أهلاً يا دكتور! أنا مساعد الدكتور 🤖\nأقدر أشرح وأبحث على النت وأحلل الصور وأرد من كتب المادة.\nلو عايز تجهّز امتحان اكتب: "تفعيل تسجيل الامتحان"') + note;
-  }
+  const hint = !aiIsDoctor() ? '' : (aiLangMode === 'en'
+    ? '\n\nDoctor? To prepare an exam, write: "' + EXAM_ON + '"'
+    : '\n\nلو إنت دكتور وعايز تجهّز امتحان اكتب: "' + EXAM_ON + '"');
 
   return (aiLangMode === 'en'
     ? "Hi! I'm Fahem, your AI assistant 🤖\nWrite to me in English, Arabic or any language. I can explain, solve problems, search the web, and review images you send me. I also answer from the course books when they are available."
-    : 'مرحبا! أنا فاهم، مساعد الذكاء الاصطناعي الخاص بيك 🤖\nكلمني بالمصري أو بالإنجليزي أو أي لغة. أقدر أشرح وأحل وأبحث على النت، وأرد عليك من كتب المادة، ولو بعتلي صورة أقدر أحللها أو أعدّلها لك.') + note;
+    : 'مرحبا! أنا فاهم، مساعد الذكاء الاصطناعي الخاص بيك 🤖\nكلمني بالمصري أو بالإنجليزي أو أي لغة. أقدر أشرح وأحل وأبحث على النت، وأرد عليك من كتب المادة، ولو بعتلي صورة أقدر أحللها أو أعدّلها لك.') + hint + note;
 }
 
 function appendAiBubble(role, text, extra = '') {
@@ -91,6 +118,9 @@ async function renderAiHistory() {
     appendAiBubble('model', '⚠️ ' + error.message);
     return;
   }
+
+  aiExamMode = aiScanExam((data || []).slice(-30).filter(m => m.role === 'user').map(m => m.content));
+  applyAiLabels();
 
   if (!data || !data.length) {
     appendAiBubble('model', greetingText());
@@ -167,6 +197,8 @@ async function aiSend() {
     thinking.remove();
     if (!res.ok) throw new Error(j.error || ('Error ' + res.status));
     appendAiBubble('model', j.reply);
+    aiExamMode = aiScanExam([text], aiExamMode);
+    applyAiLabels();
   } catch (e) {
     thinking.remove();
     appendAiBubble('model', '⚠️ ' + e.message);
@@ -357,9 +389,13 @@ $('ai-open').onclick = () => openAiChat(currentRoom());
 
 $('ai-chat-back').onclick = closeAiScreen;
 
-$('ai-lang').onclick = () => {
-  aiLangMode = aiLangMode === 'en' ? 'ar' : 'en';
+$('ai-lang').onclick = async () => {
+  toggleLang(); // بيقلب الصفحة كلها عربي/إنجليزي
+  aiLangMode = lang;
   applyAiLabels();
+  if (typeof renderPinned === 'function') renderPinned();
+  if (currentProfile) loadMessages(); // عشان الوقت والنصوص تتحدث
+  await renderAiHistory();
 };
 
 $('ai-clear').onclick = async () => {
