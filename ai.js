@@ -9,7 +9,7 @@ const ROOMS = ['ar-1', 'ar-2', 'ar-3', 'ar-4', 'en-1', 'en-2', 'en-3', 'en-4'];
 let aiRoom = null;
 let aiBusy = false;
 let aiPending = null;
-let aiLangMode = localStorage.getItem('aiLang') || lang;
+let aiLangMode = lang; // يتبع لغة الصفحة، والزرار جوه الشات بيغيّرها للجلسة دي بس
 
 $('ai-open').innerHTML = AI_ICON;
 document.querySelectorAll('.ai-avatar').forEach(el => { el.innerHTML = AI_ICON; });
@@ -22,7 +22,7 @@ function aiRoomTitle(room) {
 }
 
 function greetingText() {
-  return lang === 'en'
+  return aiLangMode === 'en'
     ? "Hi! I'm Zaboula, your AI assistant 🤖\nWrite to me in English, Arabic or any language. I can explain, solve problems, search the web, and review PDFs or images you send me.\n\n⚠️ Note: this chat is deleted if you leave it for one hour without sending any message."
     : 'مرحبا! أنا زعبوله، مساعد الذكاء الاصطناعي الخاص بيك 🤖\nكلمني بالمصري أو بالإنجليزي أو أي لغة. أقدر أشرح وأحل وأبحث على النت، وتبعتلي PDF أو صورة وأنا أحللها أو أعدّلها لك.\n\n⚠️ ملحوظة: الشات ده هيتمسح لو طلعت برا الشات لمدة ساعة من غير ما تبعت أي رسالة.';
 }
@@ -39,10 +39,10 @@ function appendAiBubble(role, text, extra = '') {
 
 function applyAiLabels() {
   $('ai-room-label').textContent = aiRoom ? aiRoomTitle(aiRoom) : '';
-  $('ai-back-text').textContent = lang === 'en' ? 'Back' : 'رجوع';
+  $('ai-back-text').textContent = aiLangMode === 'en' ? 'Back' : 'رجوع';
   $('ai-lang').textContent = aiLangMode === 'en' ? 'عربي' : 'EN';
-  $('ai-input').placeholder = lang === 'en' ? 'Write to Zaboula...' : 'اكتب لزعبوله...';
-  $('ai-attach').title = lang === 'en' ? 'Attach a PDF or image' : 'ارفع PDF أو صورة';
+  $('ai-input').placeholder = aiLangMode === 'en' ? 'Write to Zaboula...' : 'اكتب لزعبوله...';
+  $('ai-attach').title = aiLangMode === 'en' ? 'Attach a PDF or image' : 'ارفع PDF أو صورة';
 }
 
 async function renderAiHistory() {
@@ -71,6 +71,7 @@ async function renderAiHistory() {
 
 async function openAiChat(room) {
   aiRoom = room;
+  aiLangMode = lang; // كل ما تفتح الشات، زعبوله يتبع لغة الصفحة
   $('ai-chat-screen').classList.remove('hidden');
   applyAiLabels();
   await renderAiHistory();
@@ -113,12 +114,12 @@ async function aiSend() {
 
   aiBusy = true;
   $('ai-send').disabled = true;
-  const thinking = appendAiBubble('model', lang === 'en' ? 'Zaboula is thinking...' : 'زعبوله بيفكر...', 'thinking');
+  const thinking = appendAiBubble('model', aiLangMode === 'en' ? 'Zaboula is thinking...' : 'زعبوله بيفكر...', 'thinking');
 
   try {
     const { data: sess } = await sb.auth.getSession();
     const token = sess.session ? sess.session.access_token : null;
-    if (!token) throw new Error(lang === 'en' ? 'Please log in again' : 'سجّل دخول تاني');
+    if (!token) throw new Error(aiLangMode === 'en' ? 'Please log in again' : 'سجّل دخول تاني');
 
     const res = await fetch(`${SUPABASE_URL}/functions/v1/ai-chat`, {
       method: 'POST',
@@ -243,13 +244,12 @@ $('ai-chat-back').onclick = closeAiScreen;
 
 $('ai-lang').onclick = () => {
   aiLangMode = aiLangMode === 'en' ? 'ar' : 'en';
-  localStorage.setItem('aiLang', aiLangMode);
   applyAiLabels();
 };
 
 $('ai-clear').onclick = async () => {
   if (!aiRoom) return;
-  if (!confirm(lang === 'en' ? 'Clear this chat?' : 'تمسح المحادثة دي؟')) return;
+  if (!confirm(aiLangMode === 'en' ? 'Clear this chat?' : 'تمسح المحادثة دي؟')) return;
   const { error } = await sb.from('ai_messages').delete().eq('room', aiRoom);
   if (error) return alert(error.message);
   await renderAiHistory();
@@ -263,19 +263,19 @@ $('ai-file').onchange = async () => {
   if (!f) return;
 
   if (!AI_MIME.includes(f.type)) {
-    return alert(lang === 'en' ? 'Only PDF or image files are supported' : 'الملفات المدعومة: PDF أو صور');
+    return alert(aiLangMode === 'en' ? 'Only PDF or image files are supported' : 'الملفات المدعومة: PDF أو صور');
   }
   if (f.size > AI_MAX_FILE) {
-    return alert(lang === 'en' ? 'Max file size is 5 MB' : 'أقصى حجم للملف 5 ميجا');
+    return alert(aiLangMode === 'en' ? 'Max file size is 5 MB' : 'أقصى حجم للملف 5 ميجا');
   }
 
   try {
     const data = await readFileB64(f);
     aiPending = { name: f.name, mime: f.type, data };
-    $('ai-file-name').textContent = '📎 ' + f.name + (lang === 'en' ? '  (tap to remove)' : '  (اضغط للإلغاء)');
+    $('ai-file-name').textContent = '📎 ' + f.name + (aiLangMode === 'en' ? '  (tap to remove)' : '  (اضغط للإلغاء)');
     $('ai-file-name').classList.remove('hidden');
   } catch {
-    alert(lang === 'en' ? 'Could not read the file' : 'ما قدرتش أقرأ الملف');
+    alert(aiLangMode === 'en' ? 'Could not read the file' : 'ما قدرتش أقرأ الملف');
   }
 };
 
