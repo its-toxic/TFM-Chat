@@ -123,6 +123,20 @@ function aiStopSpeaking() {
   if ($('ai-status') && $('ai-status').classList.contains('speak')) aiSetStatus('');
 }
 
+// يختار أحسن صوت ذكر موجود في الجهاز، وإلا أي صوت متاح بنفس اللغة
+function pickVoice() {
+  const wantEn = aiLangMode === 'en';
+  const pool = window.speechSynthesis.getVoices()
+    .filter(v => v.lang && v.lang.toLowerCase().startsWith(wantEn ? 'en' : 'ar'));
+  if (!pool.length) return null;
+  if (wantEn) return pool.find(v => /david|mark|male|guy|daniel/i.test(v.name)) || pool[0];
+  const male = /hamed|majed|maged|naayf|male|حامد|ماجد/i;
+  const female = /salma|zariyah|female|سلمى/i;
+  return pool.find(v => male.test(v.name))
+    || pool.find(v => !female.test(v.name))
+    || pool[0];
+}
+
 function aiSpeak(text) {
   if (!('speechSynthesis' in window)) return;
   const clean = cleanForSpeech(text);
@@ -130,14 +144,15 @@ function aiSpeak(text) {
   const synth = window.speechSynthesis;
   synth.cancel();
 
-  const want = aiLangMode === 'en' ? 'en' : 'ar';
-  const voice = synth.getVoices().find(v => v.lang && v.lang.toLowerCase().startsWith(want)) || null;
+  const voice = pickVoice();
   const parts = splitForSpeech(clean);
 
   parts.forEach((p, i) => {
     const u = new SpeechSynthesisUtterance(p);
     u.lang = aiLangMode === 'en' ? 'en-US' : 'ar-EG';
     if (voice) u.voice = voice;
+    u.rate = 0.95;
+    u.pitch = 0.8; // صوت أعمق شوية
     u.onstart = () => { if (i === 0) aiSetStatus(tr('speak'), 'speak'); };
     u.onend = () => { if (i === parts.length - 1) aiSetStatus(''); };
     u.onerror = () => { aiSetStatus(''); };
@@ -229,10 +244,6 @@ function aiCancelMic() {
   }
 }
 
-function aiIsDoctorName() {
-  return aiExamMode;
-}
-
 function aiScanExam(texts, start = false) {
   if (!aiIsDoctor()) return false;
   let on = start;
@@ -276,18 +287,12 @@ function aiRoomTitle(room) {
   return `${trk} · ${lvl}`;
 }
 
+// الترحيب: "أهلا وسهلا يا دكتور" بتظهر بس بعد تفعيل وضع الامتحان، والملحوظة بتتقال مرة واحدة في أول رسالة (من السيرفر)
 function greetingText() {
-  const note = aiLangMode === 'en'
-    ? '\n\n⚠️ Note: this chat is deleted if you leave it for one hour without sending any message.'
-    : '\n\n⚠️ ملحوظة: الشات ده هيتمسح لو طلعت برا الشات لمدة ساعة من غير ما تبعت أي رسالة.';
-
-  const hint = !aiIsDoctor() ? '' : (aiLangMode === 'en'
-    ? '\n\nDoctor? To prepare an exam, write: "' + EXAM_ON + '"'
-    : '\n\nلو إنت دكتور وعايز تجهّز امتحان اكتب: "' + EXAM_ON + '"');
-
-  return (aiLangMode === 'en'
-    ? "Hi! I'm Fahem, your AI assistant 🤖\nWrite to me in English, Arabic or any language. I can explain, solve problems, search the web, and review images you send me. I also answer from the course books when they are available."
-    : 'مرحبا! أنا فاهم، مساعد الذكاء الاصطناعي الخاص بيك 🤖\nكلمني بالمصري أو بالإنجليزي أو أي لغة. أقدر أشرح وأحل وأبحث على النت، وأرد عليك من كتب المادة، ولو بعتلي صورة أقدر أحللها أو أعدّلها لك.') + hint + note;
+  if (aiLangMode === 'en') {
+    return "Welcome, I'm Fahem, your AI assistant 🤖\nWrite to me in English, Arabic or any language. I can explain, solve problems, search the web, and review images you send me. I also answer from the course books when they are available.";
+  }
+  return 'أهلا وسهلا معاك فاهم 🤖\nكلمني بالمصري أو بالإنجليزي أو أي لغة. أقدر أشرح وأحل وأبحث على النت، وأرد عليك من كتب المادة، ولو بعتلي صورة أقدر أحللها أو أعدّلها لك.';
 }
 
 function appendAiBubble(role, text, extra = '') {
@@ -413,8 +418,14 @@ async function aiSend(fromVoice = false) {
     thinking.remove();
     if (!res.ok) throw new Error(j.error || ('Error ' + res.status));
     appendAiBubble('model', j.reply);
+    const wasExam = aiExamMode;
     aiExamMode = aiScanExam([text], aiExamMode);
     applyAiLabels();
+    if (!wasExam && aiExamMode) {
+      appendAiBubble('model', aiLangMode === 'en'
+        ? 'Welcome, Doctor. Exam mode is on ✅'
+        : 'أهلا وسهلا يا دكتور، وضع الامتحان اتفعّل ✅');
+    }
     aiSetStatus('');
     if (fromVoice && aiVoiceOn()) aiSpeak(j.reply);
   } catch (e) {
