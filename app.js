@@ -396,9 +396,21 @@ $('contact-open').onclick = () => $('contact-modal').classList.remove('hidden');
 $('contact-close').onclick = () => $('contact-modal').classList.add('hidden');
 $('contact-send').onclick = () => {
   const text = $('contact-msg').value.trim();
+  if (!text) return alert(lang === 'en' ? 'Write your message first' : 'اكتب رسالتك الأول');
+
   const subject = encodeURIComponent(t('contactSubject'));
   const body = encodeURIComponent(text);
-  window.location.href = `mailto:${CONTACT_EMAIL}?subject=${subject}&body=${body}`;
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+  if (isMobile) {
+    // الموبايل: بيفتح تطبيق الإيميل
+    window.location.href = `mailto:${CONTACT_EMAIL}?subject=${subject}&body=${body}`;
+  } else {
+    // الكمبيوتر: بيفتح Gmail في تاب جديد (لأن mailto مش بيشتغل من غير برنامج إيميل)
+    const url = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(CONTACT_EMAIL)}&su=${subject}&body=${body}`;
+    const w = window.open(url, '_blank');
+    if (!w) window.location.href = url;
+  }
 };
 
 // ---------- تغيير الباسورد بعد اللينك ----------
