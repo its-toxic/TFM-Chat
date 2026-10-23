@@ -28,6 +28,7 @@ const T = {
     checkEmail: 'اتعمل الحساب. اتأكد من إيميلك أو سجّل دخول',
     loginFail: 'الإيميل أو الباسورد غلط', exists: 'الإيميل ده متسجل قبل كده',
     resetSent: 'بعتنالك لينك تغيير الباسورد على الإيميل', pwChanged: 'تم تغيير الباسورد',
+    linkExpired: 'اللينك انتهى أو اتستخدم قبل كده. اطلب لينك جديد من "نسيت كلمة السر"',
     recTitle: 'باسورد جديد', recSave: 'حفظ الباسورد',
     nameAsk: 'اكتب الاسم الجديد:', nameFail: 'فشل التغيير: ',
     avatarFail: 'فشل رفع الصورة: ', avatarSaved: 'تم حفظ صورة البروفايل',
@@ -76,6 +77,7 @@ const T = {
     checkEmail: 'Account created. Check your email or log in',
     loginFail: 'Wrong email or password', exists: 'This email is already registered',
     resetSent: 'We sent a password reset link to your email', pwChanged: 'Password changed',
+    linkExpired: 'This link expired or was already used. Request a new one from "Forgot password?"',
     recTitle: 'New password', recSave: 'Save password',
     nameAsk: 'Enter the new name:', nameFail: 'Failed: ',
     avatarFail: 'Image upload failed: ', avatarSaved: 'Profile picture saved',
@@ -341,7 +343,11 @@ $('auth-submit').onclick = async () => {
   if (!file) return setMsg('auth-msg', t('avatarReq'));
 
   signingUp = true;
-  const { data, error } = await sb.auth.signUp({ email, password });
+  const { data, error } = await sb.auth.signUp({
+    email,
+    password,
+    options: { emailRedirectTo: window.location.origin + window.location.pathname }
+  });
   if (error) {
     signingUp = false;
     return setMsg('auth-msg', translateError(error.message));
@@ -399,6 +405,16 @@ $('contact-send').onclick = () => {
 $('recovery-btn').onclick = async () => {
   const pw = $('new-password').value;
   if (!validPassword(pw)) return setMsg('rec-msg', t('pwInvalid'));
+
+  // لو مفيش جلسة فعلية، اللينك انتهى أو اتستخدم قبل كده
+  const { data: cur } = await sb.auth.getSession();
+  if (!cur.session) {
+    recovering = false;
+    $('new-password').value = '';
+    showScreen('auth-screen');
+    return setMsg('auth-msg', t('linkExpired'));
+  }
+
   const { error } = await sb.auth.updateUser({ password: pw });
   if (error) return setMsg('rec-msg', error.message);
   recovering = false;
@@ -416,6 +432,12 @@ sb.auth.onAuthStateChange((event, session) => {
 });
 
 async function handleAuthChange(event, session) {
+  // نمسح التوكن من اللينك عشان شاشة الباسورد الجديد ما تتفتحش تاني مع الريفريش
+  if ((session || event === 'PASSWORD_RECOVERY') &&
+      /access_token|type=recovery|code=/.test(location.hash + location.search)) {
+    history.replaceState(null, '', location.pathname);
+  }
+
   if (event === 'PASSWORD_RECOVERY') {
     recovering = true;
     showScreen('recovery-screen');
@@ -1479,6 +1501,31 @@ async function loadUsers() {
     box.appendChild(row);
   });
 }
+
+// ---------- زرار إظهار/إخفاء الباسورد ----------
+function addPwToggle(id) {
+  const inp = $(id);
+  if (!inp) return;
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'position:relative;width:100%;';
+  inp.parentNode.insertBefore(wrap, inp);
+  wrap.appendChild(inp);
+  inp.style.width = '100%';
+  inp.style.paddingRight = '48px';
+
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.textContent = '👁️';
+  b.style.cssText = 'position:absolute;top:0;bottom:0;right:6px;margin:auto 0;height:34px;background:transparent;padding:4px 8px;font-size:18px;line-height:1;';
+  b.onclick = () => {
+    const show = inp.type === 'password';
+    inp.type = show ? 'text' : 'password';
+    b.textContent = show ? '🙈' : '👁️';
+  };
+  wrap.appendChild(b);
+}
+addPwToggle('password');
+addPwToggle('new-password');
 
 // ---------- بدء التطبيق ----------
 applyRoomUI();

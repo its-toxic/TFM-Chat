@@ -62,6 +62,8 @@ $('gate-join').onclick = async () => {
     return;
   }
   if (data === true) {
+    // نمسح أي توكن من اللينك قبل الريفريش عشان شاشة الباسورد الجديد ما تظهرش تاني
+    history.replaceState(null, '', location.pathname);
     location.reload();
   } else {
     $('gate-err').textContent = lang === 'en' ? 'Wrong code' : 'الكود غلط';
@@ -74,6 +76,7 @@ $('gate-code').addEventListener('keydown', e => {
 
 $('gate-logout').onclick = async () => {
   await sb.auth.signOut({ scope: 'local' });
+  history.replaceState(null, '', location.pathname);
   location.reload();
 };
 
