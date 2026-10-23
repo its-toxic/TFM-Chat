@@ -1,4 +1,4 @@
-// ---------- تنبيه قبل مسح محادثة زعبوله ----------
+// ---------- تنبيه قبل مسح محادثة المساعد ----------
 const AI_TTL_MIN = 60;   // المحادثة بتتمسح بعد ساعة من آخر رسالة
 const AI_WARN_MIN = 5;   // التنبيه يظهر قبلها بكام دقيقة
 
@@ -31,8 +31,8 @@ async function checkAiExpiry() {
   if (minsLeft > 0 && minsLeft <= AI_WARN_MIN) {
     const m = Math.ceil(minsLeft);
     aiWarnEl.textContent = lang === 'en'
-      ? `Zaboula chat will be deleted if you send no message within about ${m} min.`
-      : `شات زعبوله هيتمسح لو مبعتش أي رسالة خلال حوالي ${m} دقايق.`;
+      ? `This chat will be deleted if you send no message within about ${m} min.`
+      : `الشات ده هيتمسح لو مبعتش أي رسالة خلال حوالي ${m} دقايق.`;
     aiWarnEl.classList.remove('hidden');
   } else {
     aiWarnEl.classList.add('hidden');

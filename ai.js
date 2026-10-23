@@ -1,6 +1,6 @@
-// ---------- زعبوله: مساعد الذكاء الاصطناعي ----------
+// ---------- فاهم: مساعد الذكاء الاصطناعي (ومساعد الدكتور للأدمن) ----------
 
-const AI_ICON = '<img src="ai-icon.png" alt="زعبوله">';
+const AI_ICON = '<img src="ai-icon.png" alt="">';
 const AI_MAX_FILE = 5 * 1024 * 1024;
 const AI_BOOK_MAX = 50 * 1024 * 1024;
 const AI_MIME = ['image/png', 'image/jpeg', 'image/webp'];
@@ -15,6 +15,23 @@ let aiLangMode = lang; // يتبع لغة الصفحة، والزرار جوه �
 $('ai-open').innerHTML = AI_ICON;
 document.querySelectorAll('.ai-avatar').forEach(el => { el.innerHTML = AI_ICON; });
 
+// الدكتور = الأدمن
+function aiIsDoctor() {
+  return !!currentProfile && currentProfile.role === 'admin';
+}
+
+// الاسم بالعربي والإنجليزي: فاهم للطلاب، ومساعد الدكتور للأدمن
+function aiNames() {
+  return aiIsDoctor()
+    ? { ar: 'مساعد الدكتور', en: 'Doctor Assistant' }
+    : { ar: 'فاهم', en: 'Fahem' };
+}
+
+function aiName() {
+  const n = aiNames();
+  return aiLangMode === 'en' ? n.en : n.ar;
+}
+
 function aiRoomTitle(room) {
   const parts = room.split('-');
   const trk = parts[0] === 'ar' ? t('trkAr') : t('trkEn');
@@ -23,9 +40,19 @@ function aiRoomTitle(room) {
 }
 
 function greetingText() {
-  return aiLangMode === 'en'
-    ? "Hi! I'm Zaboula, your AI assistant 🤖\nWrite to me in English, Arabic or any language. I can explain, solve problems, search the web, and review images you send me. I also answer from the course books when they are available.\n\n⚠️ Note: this chat is deleted if you leave it for one hour without sending any message."
-    : 'مرحبا! أنا زعبوله، مساعد الذكاء الاصطناعي الخاص بيك 🤖\nكلمني بالمصري أو بالإنجليزي أو أي لغة. أقدر أشرح وأحل وأبحث على النت، وأرد عليك من كتب المادة، ولو بعتلي صورة أقدر أحللها أو أعدّلها لك.\n\n⚠️ ملحوظة: الشات ده هيتمسح لو طلعت برا الشات لمدة ساعة من غير ما تبعت أي رسالة.';
+  const note = aiLangMode === 'en'
+    ? '\n\n⚠️ Note: this chat is deleted if you leave it for one hour without sending any message.'
+    : '\n\n⚠️ ملحوظة: الشات ده هيتمسح لو طلعت برا الشات لمدة ساعة من غير ما تبعت أي رسالة.';
+
+  if (aiIsDoctor()) {
+    return (aiLangMode === 'en'
+      ? 'Hello Doctor! I\'m your Doctor Assistant 🤖\nI can explain, search the web, review images, and answer from the course books.\nTo start preparing an exam, write: "تفعيل تسجيل الامتحان"'
+      : 'أهلاً يا دكتور! أنا مساعد الدكتور 🤖\nأقدر أشرح وأبحث على النت وأحلل الصور وأرد من كتب المادة.\nلو عايز تجهّز امتحان اكتب: "تفعيل تسجيل الامتحان"') + note;
+  }
+
+  return (aiLangMode === 'en'
+    ? "Hi! I'm Fahem, your AI assistant 🤖\nWrite to me in English, Arabic or any language. I can explain, solve problems, search the web, and review images you send me. I also answer from the course books when they are available."
+    : 'مرحبا! أنا فاهم، مساعد الذكاء الاصطناعي الخاص بيك 🤖\nكلمني بالمصري أو بالإنجليزي أو أي لغة. أقدر أشرح وأحل وأبحث على النت، وأرد عليك من كتب المادة، ولو بعتلي صورة أقدر أحللها أو أعدّلها لك.') + note;
 }
 
 function appendAiBubble(role, text, extra = '') {
@@ -39,10 +66,14 @@ function appendAiBubble(role, text, extra = '') {
 }
 
 function applyAiLabels() {
+  const n = aiNames();
+  $('ai-name-ar').textContent = n.ar;
+  $('ai-name-en').textContent = n.en;
+  $('ai-open').title = aiLangMode === 'en' ? n.en : n.ar;
   $('ai-room-label').textContent = aiRoom ? aiRoomTitle(aiRoom) : '';
   $('ai-back-text').textContent = aiLangMode === 'en' ? 'Back' : 'رجوع';
   $('ai-lang').textContent = aiLangMode === 'en' ? 'عربي' : 'EN';
-  $('ai-input').placeholder = aiLangMode === 'en' ? 'Write to Zaboula...' : 'اكتب لزعبوله...';
+  $('ai-input').placeholder = aiLangMode === 'en' ? `Write to ${n.en}...` : `اكتب لـ${n.ar}...`;
   $('ai-attach').title = aiLangMode === 'en' ? 'Attach an image' : 'ارفع صورة';
 }
 
@@ -72,7 +103,7 @@ async function renderAiHistory() {
 
 async function openAiChat(room) {
   aiRoom = room;
-  aiLangMode = lang; // كل ما تفتح الشات، زعبوله يتبع لغة الصفحة
+  aiLangMode = lang; // كل ما تفتح الشات، المساعد يتبع لغة الصفحة
   $('ai-chat-screen').classList.remove('hidden');
   applyAiLabels();
   await renderAiHistory();
@@ -115,7 +146,7 @@ async function aiSend() {
 
   aiBusy = true;
   $('ai-send').disabled = true;
-  const thinking = appendAiBubble('model', aiLangMode === 'en' ? 'Zaboula is thinking...' : 'زعبوله بيفكر...', 'thinking');
+  const thinking = appendAiBubble('model', aiLangMode === 'en' ? `${aiName()} is thinking...` : `${aiName()} بيفكر...`, 'thinking');
 
   try {
     const { data: sess } = await sb.auth.getSession();
@@ -196,13 +227,13 @@ function makeChunks(pages) {
   return out;
 }
 
-// ---------- كتب زعبوله (الأدمن) ----------
+// ---------- كتب المساعد (الأدمن) ----------
 async function loadAiBooksAdmin() {
   const box = $('ai-books-admin');
   box.innerHTML = '';
 
   const title = document.createElement('h3');
-  title.textContent = lang === 'en' ? '📚 Zaboula books' : '📚 كتب زعبوله';
+  title.textContent = lang === 'en' ? '📚 Assistant books' : '📚 كتب المساعد';
   box.appendChild(title);
 
   const form = document.createElement('div');
