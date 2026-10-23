@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <title>الاختبارات | TFM Chat</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" type="image/png" href="icon-192.png">
+  <style>
+    :root {
+      --accent: #6e0819;
+      --bg: #f4f1ee;
+      --card: #ffffff;
+      --text: #1d1d1f;
+      --muted: #6b6b70;
+      --ok: #1e7b43;
+      --bad: #b3261e;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #121214;
+        --card: #1c1c20;
+        --text: #f1f1f3;
+        --muted: #9a9aa3;
+      }
+    }
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, "Segoe UI", Tahoma, sans-serif;
+      padding: 16px;
+      min-height: 100vh;
+    }
+    header { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+    header h1 { margin: 0; font-size: 20px; color: var(--accent); }
+    header a { color: var(--accent); text-decoration: none; font-weight: bold; }
+    .picker { display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+    .picker select {
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid var(--muted);
+      background: var(--card);
+      color: var(--text);
+      font-size: 15px;
+    }
+    #status { color: var(--muted); margin-bottom: 12px; font-size: 14px; }
+    .q {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 12px;
+      border: 2px solid transparent;
+    }
+    .q.ok { border-color: var(--ok); }
+    .q.bad { border-color: var(--bad); }
+    .q legend { font-weight: bold; padding: 0 4px; margin-bottom: 6px; }
+    .opt { display: flex; gap: 10px; align-items: center; padding: 8px 4px; font-size: 16px; cursor: pointer; }
+    .opt input { width: 18px; height: 18px; flex: 0 0 auto; }
+    .hint { font-size: 14px; margin-top: 6px; }
+    .hint.ok { color: var(--ok); }
+    .hint.bad { color: var(--bad); }
+    .actions { display: flex; gap: 10px; margin: 16px 0; flex-wrap: wrap; }
+    .actions button {
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 16px;
+      cursor: pointer;
+      border: 1px solid var(--accent);
+    }
+    .actions .primary { background: var(--accent); color: #fff; }
+    .actions .ghost { background: transparent; color: var(--accent); }
+    #result {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 16px;
+      font-size: 18px;
+      font-weight: bold;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="./">→ رجوع للشات</a>
+    <h1>الاختبارات</h1>
+  </header>
+
+  <div class="picker">
+    <select id="track" aria-label="الشعبة">
+      <option value="ar">عربي</option>
+      <option value="en">انجليزي</option>
+    </select>
+    <select id="level" aria-label="المستوى">
+      <option value="1">الأول</option>
+      <option value="2">الثاني</option>
+      <option value="3">الثالث</option>
+      <option value="4">الرابع</option>
+    </select>
+  </div>
+
+  <div id="status"></div>
+  <form id="quiz" autocomplete="off"></form>
+
+  <div class="actions">
+    <button id="submit" class="primary" type="button" hidden>تصحيح</button>
+    <button id="reset" class="ghost" type="button" hidden>اختبار جديد</button>
+  </div>
+
+  <div id="result" hidden></div>
+
+  <script src="quiz.js"></script>
+</body>
+</html>
