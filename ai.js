@@ -274,7 +274,7 @@ function aiNorm(s) {
 function aiNames() {
   return aiExamMode
     ? { ar: 'مساعد الدكتور', en: 'Doctor Assistant' }
-    : { ar: 'فاهم', en: 'Fahem' };
+    : { ar: 'فهيم', en: 'Faheem' };
 }
 
 function aiName() {
@@ -292,9 +292,9 @@ function aiRoomTitle(room) {
 // الترحيب: "أهلا وسهلا يا دكتور" بتظهر بس بعد تفعيل وضع الامتحان، والملحوظة بتتقال مرة واحدة في أول رسالة (من السيرفر)
 function greetingText() {
   if (aiLangMode === 'en') {
-    return "Welcome, I'm Fahem, your AI assistant 🤖\nWrite to me in English, Arabic or any language. I can explain, solve problems, search the web, and review images you send me. I also answer from the course books when they are available.";
+    return "Welcome, I'm Faheem, your AI assistant 🤖\nWrite to me in English, Arabic or any language. I can explain, solve problems, search the web, and review images you send me. I also answer from the course books when they are available.";
   }
-  return 'أهلا وسهلا معاك فاهم 🤖\nكلمني بالمصري أو بالإنجليزي أو أي لغة. أقدر أشرح وأحل وأبحث على النت، وأرد عليك من كتب المادة، ولو بعتلي صورة أقدر أحللها أو أعدّلها لك.';
+  return 'أهلا وسهلا معاك فهيم 🤖\nكلمني بالمصري أو بالإنجليزي أو أي لغة. أقدر أشرح وأحل وأبحث على النت، وأرد عليك من كتب المادة، ولو بعتلي صورة أقدر أحللها أو أعدّلها لك.';
 }
 
 // اقتراحات أسئلة جاهزة تظهر في الشات الفاضي (3 عشوائيين)
