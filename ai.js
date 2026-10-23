@@ -25,15 +25,212 @@ const EXAM_ON = 'تفعيل تسجيل الامتحان';
 const EXAM_OFF = 'إيقاف وضع الامتحان';
 let aiExamMode = false;
 
-function aiNorm(s) {
+// ---------- الصوت (بيشتغل في المتصفح، من غير مفاتيح ومن غير تكلفة) ----------
+const AI_VOICE_KEY = 'ai_voice_reply';
+const AI_SR = window.SpeechRecognition || window.webkitSpeechRecognition || null;
+let aiRec = null;
+let aiListening = false;
+let aiRecBase = '';
+let aiRecText = '';
+let aiRecErr = null;
+
+const AI_TXT = {
+  listening: { ar: 'بسمعك... اضغط ⏹️ لما تخلص', en: 'Listening... tap ⏹️ when you finish' },
+  think: { ar: 'بفكر...', en: 'Thinking...' },
+  speak: { ar: '🔊 بتكلم... اضغط هنا للإيقاف', en: '🔊 Speaking... tap here to stop' },
+  noMic: { ar: 'المتصفح ده مش بيدعم الرسايل الصوتية. جرّب Chrome.', en: 'This browser does not support voice input. Try Chrome.' },
+  micFail: { ar: 'ما قدرتش أشغّل الميكروفون، جرّب تاني.', en: "Couldn't start the microphone, try again." },
+  noSpeech: { ar: 'ما سمعتش كلام، جرّب تاني.', en: "I didn't hear anything, try again." },
+  denied: { ar: 'الميكروفون مقفول. اسمح للمتصفح يستخدمه من 🔒 جنب العنوان.', en: 'Microphone is blocked. Allow it from the 🔒 icon next to the address.' },
+  noDevice: { ar: 'مفيش ميكروفون متوصل بالجهاز.', en: 'No microphone found on this device.' },
+  netErr: { ar: 'تحويل الكلام لنص محتاج إنترنت، والاتصال مش مستقر دلوقتي.', en: 'Speech recognition needs internet, and the connection is unstable.' },
+};
+
+function tr(k) {
+  const x = AI_TXT[k];
+  return aiLangMode === 'en' ? x.en : x.ar;
+}
+
+function aiSetStatus(text, kind = '') {
+  const el = $('ai-status');
+  if (!el) return;
+  el.textContent = text || '';
+  el.className = 'ai-status' + (kind ? ' ' + kind : '') + (text ? '' : ' hidden');
+  el.onclick = kind === 'speak' ? aiStopSpeaking : null;
+}
+
+function aiVoiceOn() {
+  try { return localStorage.getItem(AI_VOICE_KEY) !== 'off'; } catch { return true; }
+}
+
+function aiSetVoiceOn(on) {
+  try { localStorage.setItem(AI_VOICE_KEY, on ? 'on' : 'off'); } catch {}
+}
+
+function applySpeakBtn() {
+  const b = $('ai-speak');
+  if (!b) return;
+  const on = aiVoiceOn();
+  b.textContent = on ? '🔊' : '🔇';
+  b.title = aiLangMode === 'en'
+    ? (on ? 'Voice replies: on' : 'Voice replies: off')
+    : (on ? 'الرد الصوتي: شغال' : 'الرد الصوتي: مقفول');
+}
+
+function setMicUI() {
+  const b = $('ai-mic');
+  if (!b) return;
+  b.textContent = aiListening ? '⏹️' : '🎙️';
+  b.classList.toggle('mic-on', aiListening);
+  b.title = aiListening
+    ? (aiLangMode === 'en' ? 'Stop' : 'إيقاف')
+    : (aiLangMode === 'en' ? 'Voice message' : 'رسالة صوتية');
+}
+
+// يشيل الماركداون والإيموجي والروابط علشان الصوت يبقى نظيف
+function cleanForSpeech(s) {
   return String(s || '')
-    .toLowerCase()
-    .replace(/[\u064B-\u0652\u0640]/g, '')
-    .replace(/[إأآ]/g, 'ا')
-    .replace(/ى/g, 'ي')
-    .replace(/ة/g, 'ه')
-    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
-    .replace(/\s+/g, ' ');
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/https?:\/\/\S+/g, ' ')
+    .replace(/[*_#`~>|]/g, ' ')
+    .replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{FE0F}]/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 2000);
+}
+
+// يقسم الرد لجمل قصيرة، عشان المتصفح ما يقطعش الكلام الطويل
+function splitForSpeech(s) {
+  const sentences = s.match(/[^.!?؟]+[.!?؟]?/g) || [s];
+  const out = [];
+  let cur = '';
+  for (const x of sentences) {
+    const t = x.trim();
+    if (!t) continue;
+    if (cur && (cur + ' ' + t).length > 200) {
+      out.push(cur);
+      cur = t;
+    } else {
+      cur = cur ? cur + ' ' + t : t;
+    }
+  }
+  if (cur) out.push(cur);
+  return out;
+}
+
+function aiStopSpeaking() {
+  if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+  if ($('ai-status') && $('ai-status').classList.contains('speak')) aiSetStatus('');
+}
+
+function aiSpeak(text) {
+  if (!('speechSynthesis' in window)) return;
+  const clean = cleanForSpeech(text);
+  if (!clean) return;
+  const synth = window.speechSynthesis;
+  synth.cancel();
+
+  const want = aiLangMode === 'en' ? 'en' : 'ar';
+  const voice = synth.getVoices().find(v => v.lang && v.lang.toLowerCase().startsWith(want)) || null;
+  const parts = splitForSpeech(clean);
+
+  parts.forEach((p, i) => {
+    const u = new SpeechSynthesisUtterance(p);
+    u.lang = aiLangMode === 'en' ? 'en-US' : 'ar-EG';
+    if (voice) u.voice = voice;
+    u.onstart = () => { if (i === 0) aiSetStatus(tr('speak'), 'speak'); };
+    u.onend = () => { if (i === parts.length - 1) aiSetStatus(''); };
+    u.onerror = () => { aiSetStatus(''); };
+    synth.speak(u);
+  });
+}
+
+function aiStartMic() {
+  if (!aiRoom || aiBusy || aiListening) return;
+  if (!AI_SR) return aiSetStatus(tr('noMic'), 'error');
+
+  aiStopSpeaking();
+  const rec = new AI_SR();
+  rec.lang = aiLangMode === 'en' ? 'en-US' : 'ar-EG';
+  rec.interimResults = true;
+  rec.continuous = false;
+  rec.maxAlternatives = 1;
+
+  aiRecBase = $('ai-input').value.trim();
+  aiRecText = '';
+  aiRecErr = null;
+
+  rec.onstart = () => {
+    aiListening = true;
+    setMicUI();
+    aiSetStatus(tr('listening'), 'listen');
+  };
+
+  rec.onresult = e => {
+    let interim = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const r = e.results[i];
+      if (r.isFinal) aiRecText += r[0].transcript;
+      else interim += r[0].transcript;
+    }
+    $('ai-input').value = (aiRecBase + ' ' + aiRecText + interim).trim();
+  };
+
+  rec.onerror = e => {
+    aiRecErr = e.error || 'unknown';
+  };
+
+  rec.onend = () => {
+    aiListening = false;
+    aiRec = null;
+    setMicUI();
+
+    // اتلغى (مثلاً قفلنا الشات): ما نبعتش حاجة
+    if (aiRecErr === 'aborted') { aiSetStatus(''); return; }
+
+    if (aiRecErr) {
+      const map = {
+        'not-allowed': 'denied',
+        'service-not-allowed': 'denied',
+        'audio-capture': 'noDevice',
+        'network': 'netErr',
+        'no-speech': 'noSpeech',
+      };
+      aiSetStatus(tr(map[aiRecErr] || 'micFail'), 'error');
+      return;
+    }
+
+    const text = ($('ai-input').value || '').trim();
+    if (!text) { aiSetStatus(tr('noSpeech'), 'error'); return; }
+
+    aiSetStatus('');
+    aiSend(true); // الكلام اتحول لنص وبيتبعت للشات لوحده
+  };
+
+  aiRec = rec;
+  try {
+    rec.start();
+  } catch (e) {
+    aiRec = null;
+    aiListening = false;
+    setMicUI();
+    aiSetStatus(tr('micFail'), 'error');
+  }
+}
+
+function aiStopMic() {
+  if (aiRec) { try { aiRec.stop(); } catch {} }
+}
+
+function aiCancelMic() {
+  if (aiRec) {
+    aiRecErr = 'aborted';
+    try { aiRec.abort(); } catch {}
+  }
+}
+
+function aiIsDoctorName() {
+  return aiExamMode;
 }
 
 function aiScanExam(texts, start = false) {
@@ -47,6 +244,17 @@ function aiScanExam(texts, start = false) {
     else if (n.includes(onN)) on = true;
   }
   return on;
+}
+
+function aiNorm(s) {
+  return String(s || '')
+    .toLowerCase()
+    .replace(/[ً-ْـ]/g, '')
+    .replace(/[إأآ]/g, 'ا')
+    .replace(/ى/g, 'ي')
+    .replace(/ة/g, 'ه')
+    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+    .replace(/\s+/g, ' ');
 }
 
 // الاسم بالعربي والإنجليزي: فاهم، ولما وضع الامتحان يتفعل يبقى مساعد الدكتور
@@ -102,6 +310,8 @@ function applyAiLabels() {
   $('ai-lang').textContent = aiLangMode === 'en' ? 'عربي' : 'EN';
   $('ai-input').placeholder = aiLangMode === 'en' ? `Write to ${n.en}...` : `اكتب لـ${n.ar}...`;
   $('ai-attach').title = aiLangMode === 'en' ? 'Attach an image' : 'ارفع صورة';
+  applySpeakBtn();
+  setMicUI();
 }
 
 async function renderAiHistory() {
@@ -140,6 +350,9 @@ async function openAiChat(room) {
 }
 
 function closeAiScreen() {
+  aiCancelMic();
+  aiStopSpeaking();
+  aiSetStatus('');
   $('ai-chat-screen').classList.add('hidden');
 }
 
@@ -158,7 +371,8 @@ function clearAiFile() {
   $('ai-file-name').classList.add('hidden');
 }
 
-async function aiSend() {
+// fromVoice = true لما الرسالة جاية من الميكروفون، وقتها الرد بيتقري بصوت
+async function aiSend(fromVoice = false) {
   if (aiBusy || !aiRoom) return;
   const text = $('ai-input').value.trim();
   if (!text && !aiPending) return;
@@ -176,7 +390,9 @@ async function aiSend() {
 
   aiBusy = true;
   $('ai-send').disabled = true;
+  $('ai-mic').disabled = true;
   const thinking = appendAiBubble('model', aiLangMode === 'en' ? `${aiName()} is thinking...` : `${aiName()} بيفكر...`, 'thinking');
+  aiSetStatus(tr('think'), 'think');
 
   try {
     const { data: sess } = await sb.auth.getSession();
@@ -199,12 +415,16 @@ async function aiSend() {
     appendAiBubble('model', j.reply);
     aiExamMode = aiScanExam([text], aiExamMode);
     applyAiLabels();
+    aiSetStatus('');
+    if (fromVoice && aiVoiceOn()) aiSpeak(j.reply);
   } catch (e) {
     thinking.remove();
+    aiSetStatus('');
     appendAiBubble('model', '⚠️ ' + e.message);
   } finally {
     aiBusy = false;
     $('ai-send').disabled = false;
+    $('ai-mic').disabled = false;
   }
 }
 
@@ -432,9 +652,23 @@ $('ai-file').onchange = async () => {
 
 $('ai-file-name').onclick = clearAiFile;
 
-$('ai-send').onclick = aiSend;
+// الميكروفون: بيبدأ بضغطة من المستخدم بس، ولما يخلص بيبعت الكلام للشات لوحده
+$('ai-mic').onclick = () => {
+  if (aiListening) aiStopMic();
+  else aiStartMic();
+};
+
+// زرار الرد الصوتي: يشغّل أو يقفل قراية الردود
+$('ai-speak').onclick = () => {
+  const on = !aiVoiceOn();
+  aiSetVoiceOn(on);
+  if (!on) aiStopSpeaking();
+  applySpeakBtn();
+};
+
+$('ai-send').onclick = () => aiSend(false);
 $('ai-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter') aiSend();
+  if (e.key === 'Enter') aiSend(false);
 });
 
 $('set-admin').addEventListener('click', () => setTimeout(loadAiBooksAdmin, 0));
@@ -442,3 +676,21 @@ $('set-admin').addEventListener('click', () => setTimeout(loadAiBooksAdmin, 0));
 sb.auth.onAuthStateChange((event, session) => {
   if (!session) closeAiScreen();
 });
+
+// ستايل بسيط للحالة والميكروفون (من غير ما نلمس ai.css)
+(function injectVoiceStyle() {
+  const st = document.createElement('style');
+  st.textContent = `
+    .ai-status { font-size: 13px; padding: 6px 14px; text-align: center; }
+    .ai-status.listen { color: #6e0819; font-weight: bold; }
+    .ai-status.think { opacity: .75; }
+    .ai-status.speak { cursor: pointer; text-decoration: underline; }
+    .ai-status.error { color: #c0392b; }
+    #ai-mic.mic-on { color: #c0392b; animation: aiPulse 1.2s infinite; }
+    @keyframes aiPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.15); } }
+  `;
+  document.head.appendChild(st);
+})();
+
+applySpeakBtn();
+setMicUI();

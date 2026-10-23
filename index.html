@@ -248,7 +248,7 @@
     </div>
   </div>
 
-  <!-- شات زعبوله -->
+  <!-- شات فاهم -->
   <div id="ai-chat-screen" class="ai-screen hidden">
     <div class="ai-head">
       <button id="ai-chat-back" class="ai-back" aria-label="back">
@@ -262,6 +262,7 @@
         <small id="ai-room-label"></small>
       </div>
       <div class="ai-tools">
+        <button id="ai-speak" class="ghost small" title="الرد الصوتي">🔊</button>
         <button id="ai-lang" class="ghost small"></button>
         <button id="ai-clear" class="ghost small">🗑️</button>
       </div>
@@ -271,9 +272,12 @@
 
     <div id="ai-file-name" class="ai-file-name hidden"></div>
 
+    <div id="ai-status" class="ai-status hidden"></div>
+
     <div class="ai-composer">
       <input id="ai-file" type="file" accept="application/pdf,image/*" hidden>
       <button id="ai-attach" class="ghost" title="📎">📎</button>
+      <button id="ai-mic" class="ghost" title="🎙️">🎙️</button>
       <input id="ai-input" dir="auto">
       <button id="ai-send" class="primary">➤</button>
     </div>
@@ -289,7 +293,7 @@
   </script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="app.js?v=11"></script>
-  <script src="ai.js?v=7"></script>
+  <script src="ai.js?v=8"></script>
   <script src="gate.js?v=2"></script>
   <script src="ai-warn.js?v=3"></script>
 </body>
