@@ -340,7 +340,7 @@ $('auth-submit').onclick = async () => {
   // إنشاء حساب
   if (!validPassword(password)) return setMsg('auth-msg', t('pwInvalid'));
   const file = $('signup-avatar-input').files[0];
-  if (!file) return setMsg('auth-msg', t('avatarReq'));
+  if (!file && !window.pickedAvatar) return setMsg('auth-msg', t('avatarReq'));
 
   signingUp = true;
   const { data, error } = await sb.auth.signUp({
@@ -358,7 +358,7 @@ $('auth-submit').onclick = async () => {
     return setMsg('auth-msg', t('checkEmail'), false);
   }
   try {
-    await uploadAvatar(file, data.user.id);
+    await saveAvatarChoice(file, data.user.id);
   } catch (e) {
     signingUp = false;
     return setMsg('auth-msg', t('avatarFail') + e.message);
@@ -488,9 +488,9 @@ async function enterChat(userId) {
 // بوابة صورة البروفايل للحسابات اللي مفيهاش صورة
 $('gate-save').onclick = async () => {
   const file = $('gate-input').files[0];
-  if (!file) return setMsg('gate-msg', t('avatarReq'));
+  if (!file && !window.pickedAvatar) return setMsg('gate-msg', t('avatarReq'));
   try {
-    await uploadAvatar(file, currentProfile.id);
+    await saveAvatarChoice(file, currentProfile.id);
   } catch (e) {
     return setMsg('gate-msg', t('avatarFail') + e.message);
   }
