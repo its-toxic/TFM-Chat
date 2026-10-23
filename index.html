@@ -25,6 +25,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap">
   <link rel="stylesheet" href="emoji.css?v=1">
+  <link rel="stylesheet" href="modern.css?v=1">
 </head>
 <body>
 
@@ -94,9 +95,9 @@
         <span id="user-label" class="user-label"></span>
       </div>
       <div class="header-actions">
-        <button id="ai-open" class="ghost gear ai-head-btn" title="فهيم"></button>
-        <button id="members-btn" class="ghost gear" title="👥">👥</button>
-        <button id="settings-btn" class="ghost gear" title="⚙️">⚙️</button>
+        <button id="ai-open" class="ghost gear ai-head-btn" title="فهيم"><span class="ico ico-robot"></span></button>
+        <button id="members-btn" class="ghost gear" title="الأعضاء"><span class="ico ico-users"></span></button>
+        <button id="settings-btn" class="ghost gear" title="الإعدادات"><span class="ico ico-gear"></span></button>
       </div>
     </header>
 
@@ -120,9 +121,9 @@
 
     <div class="composer">
       <input id="file-input" type="file" accept="image/*,video/*,application/pdf" hidden>
-      <button id="attach-btn" class="ghost" title="📎">📎</button>
-      <button id="cam-btn" class="ghost" title="📷">📷</button>
-      <button id="mic-btn" class="ghost" title="🎙️">🎙️</button>
+      <button id="attach-btn" class="ghost" title="إرفاق"><span class="ico ico-clip"></span></button>
+      <button id="cam-btn" class="ghost" title="كاميرا"><span class="ico ico-camera"></span></button>
+      <button id="mic-btn" class="ghost" title="صوت"><span class="ico ico-mic"></span></button>
       <input id="msg-input" data-i18n-ph="msgPh">
       <button id="send-btn" class="primary" data-i18n="send"></button>
     </div>
@@ -272,11 +273,11 @@
         <small id="ai-room-label"></small>
       </div>
       <div class="ai-tools">
-        <button id="ai-speak" class="ghost small" title="الرد الصوتي">🔊</button>
+        <button id="ai-speak" class="ghost small" title="الرد الصوتي"><span class="ico ico-speaker"></span></button>
         <button id="ai-lang" class="ghost small"></button>
-        <button id="ai-cards" class="ghost small" title="الكروت">🗂️</button>
-        <button id="ai-regen" class="ghost small" title="أعد الرد">🔄</button>
-        <button id="ai-clear" class="ghost small">🗑️</button>
+        <button id="ai-cards" class="ghost small" title="الكروت"><span class="ico ico-cards"></span></button>
+        <button id="ai-regen" class="ghost small" title="أعد الرد"><span class="ico ico-refresh"></span></button>
+        <button id="ai-clear" class="ghost small" title="امسح الشات"><span class="ico ico-trash"></span></button>
       </div>
     </div>
 
@@ -288,10 +289,10 @@
 
     <div class="ai-composer">
       <input id="ai-file" type="file" accept="application/pdf,image/*" hidden>
-      <button id="ai-attach" class="ghost" title="📎">📎</button>
-      <button id="ai-mic" class="ghost" title="🎙️">🎙️</button>
+      <button id="ai-attach" class="ghost" title="إرفاق"><span class="ico ico-clip"></span></button>
+      <button id="ai-mic" class="ghost" title="صوت"><span class="ico ico-mic"></span></button>
       <input id="ai-input" dir="auto">
-      <button id="ai-send" class="primary">➤</button>
+      <button id="ai-send" class="primary" title="ابعت"><span class="ico ico-send"></span></button>
     </div>
   </div>
 
