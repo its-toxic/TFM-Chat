@@ -3,8 +3,9 @@
 const AI_ICON = '<img src="ai-icon.png" alt="زعبوله">';
 const AI_MAX_FILE = 5 * 1024 * 1024;
 const AI_BOOK_MAX = 50 * 1024 * 1024;
-const AI_MIME = ['application/pdf', 'image/png', 'image/jpeg', 'image/webp', 'image/heic', 'image/heif'];
+const AI_MIME = ['image/png', 'image/jpeg', 'image/webp'];
 const ROOMS = ['ar-1', 'ar-2', 'ar-3', 'ar-4', 'en-1', 'en-2', 'en-3', 'en-4'];
+const CHUNK_MAX = 1200;
 
 let aiRoom = null;
 let aiBusy = false;
@@ -23,8 +24,8 @@ function aiRoomTitle(room) {
 
 function greetingText() {
   return aiLangMode === 'en'
-    ? "Hi! I'm Zaboula, your AI assistant 🤖\nWrite to me in English, Arabic or any language. I can explain, solve problems, search the web, and review PDFs or images you send me.\n\n⚠️ Note: this chat is deleted if you leave it for one hour without sending any message."
-    : 'مرحبا! أنا زعبوله، مساعد الذكاء الاصطناعي الخاص بيك 🤖\nكلمني بالمصري أو بالإنجليزي أو أي لغة. أقدر أشرح وأحل وأبحث على النت، وتبعتلي PDF أو صورة وأنا أحللها أو أعدّلها لك.\n\n⚠️ ملحوظة: الشات ده هيتمسح لو طلعت برا الشات لمدة ساعة من غير ما تبعت أي رسالة.';
+    ? "Hi! I'm Zaboula, your AI assistant 🤖\nWrite to me in English, Arabic or any language. I can explain, solve problems, search the web, and review images you send me. I also answer from the course books when they are available.\n\n⚠️ Note: this chat is deleted if you leave it for one hour without sending any message."
+    : 'مرحبا! أنا زعبوله، مساعد الذكاء الاصطناعي الخاص بيك 🤖\nكلمني بالمصري أو بالإنجليزي أو أي لغة. أقدر أشرح وأحل وأبحث على النت، وأرد عليك من كتب المادة، ولو بعتلي صورة أقدر أحللها أو أعدّلها لك.\n\n⚠️ ملحوظة: الشات ده هيتمسح لو طلعت برا الشات لمدة ساعة من غير ما تبعت أي رسالة.';
 }
 
 function appendAiBubble(role, text, extra = '') {
@@ -42,7 +43,7 @@ function applyAiLabels() {
   $('ai-back-text').textContent = aiLangMode === 'en' ? 'Back' : 'رجوع';
   $('ai-lang').textContent = aiLangMode === 'en' ? 'عربي' : 'EN';
   $('ai-input').placeholder = aiLangMode === 'en' ? 'Write to Zaboula...' : 'اكتب لزعبوله...';
-  $('ai-attach').title = aiLangMode === 'en' ? 'Attach a PDF or image' : 'ارفع PDF أو صورة';
+  $('ai-attach').title = aiLangMode === 'en' ? 'Attach an image' : 'ارفع صورة';
 }
 
 async function renderAiHistory() {
@@ -144,6 +145,57 @@ async function aiSend() {
   }
 }
 
+// ---------- قراية الكتب في المتصفح (pdf.js) ----------
+let pdfJsReady = null;
+
+function loadPdfJs() {
+  if (window.pdfjsLib) return Promise.resolve();
+  if (pdfJsReady) return pdfJsReady;
+  pdfJsReady = new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+    s.onload = () => {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      resolve();
+    };
+    s.onerror = () => reject(new Error('pdf.js load failed'));
+    document.head.appendChild(s);
+  });
+  return pdfJsReady;
+}
+
+async function extractBookPages(file) {
+  await loadPdfJs();
+  const buf = await file.arrayBuffer();
+  const pdf = await window.pdfjsLib.getDocument({ data: buf }).promise;
+  const pages = [];
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const tc = await page.getTextContent();
+    const text = tc.items.map(it => it.str).join(' ').replace(/\s+/g, ' ').trim();
+    if (text) pages.push({ page: i, text });
+  }
+  return pages;
+}
+
+function makeChunks(pages) {
+  const out = [];
+  for (const p of pages) {
+    let cur = '';
+    for (const w of p.text.split(' ')) {
+      if (cur && (cur + ' ' + w).length > CHUNK_MAX) {
+        out.push({ page: p.page, text: cur.trim() });
+        cur = w;
+      } else {
+        cur = cur ? cur + ' ' + w : w;
+      }
+    }
+    if (cur.trim()) out.push({ page: p.page, text: cur.trim() });
+  }
+  return out;
+}
+
 // ---------- كتب زعبوله (الأدمن) ----------
 async function loadAiBooksAdmin() {
   const box = $('ai-books-admin');
@@ -172,7 +224,7 @@ async function loadAiBooksAdmin() {
   up.type = 'button';
   up.className = 'primary';
   up.textContent = lang === 'en' ? 'Upload book' : 'ارفع الكتاب';
-  up.onclick = () => uploadBook(sel.value, file);
+  up.onclick = () => uploadBook(sel.value, file, up);
 
   form.appendChild(sel);
   form.appendChild(file);
@@ -209,23 +261,55 @@ async function loadAiBooksAdmin() {
   });
 }
 
-async function uploadBook(room, fileInput) {
+async function uploadBook(room, fileInput, btn) {
   const f = fileInput.files[0];
   if (!f) return alert(lang === 'en' ? 'Choose a PDF first' : 'اختار ملف PDF الأول');
   if (f.type !== 'application/pdf') return alert(lang === 'en' ? 'PDF files only' : 'PDF بس');
   if (f.size > AI_BOOK_MAX) return alert(lang === 'en' ? 'Max 50 MB' : 'أقصى حجم 50 ميجا');
 
-  const safeName = f.name.replace(/[^\w.\-]/g, '_');
-  const path = `${room}/${Date.now()}_${safeName}`;
+  const oldText = btn.textContent;
+  btn.disabled = true;
+  try {
+    btn.textContent = lang === 'en' ? 'Reading the book...' : 'بقرا الكتاب...';
+    const pages = await extractBookPages(f);
+    const chunks = makeChunks(pages);
+    if (!chunks.length) {
+      alert(lang === 'en'
+        ? 'No readable text in this PDF (scanned images are not supported)'
+        : 'الملف ده مفيهوش نص مقروء (الصور الممسوحة مش بتتقري)');
+      return;
+    }
 
-  const { error: upErr } = await sb.storage.from('books').upload(path, f, { contentType: 'application/pdf' });
-  if (upErr) return alert(upErr.message);
+    btn.textContent = lang === 'en' ? 'Uploading...' : 'برفع الملف...';
+    const safeName = f.name.replace(/[^\w.\-]/g, '_');
+    const path = `${room}/${Date.now()}_${safeName}`;
+    const { error: upErr } = await sb.storage.from('books').upload(path, f, { contentType: 'application/pdf' });
+    if (upErr) return alert(upErr.message);
 
-  const { error } = await sb.from('ai_books').insert({ room, title: f.name, path, size_bytes: f.size });
-  if (error) return alert(error.message);
+    const { data: book, error } = await sb.from('ai_books')
+      .insert({ room, title: f.name, path, size_bytes: f.size })
+      .select('id')
+      .single();
+    if (error) return alert(error.message);
 
-  fileInput.value = '';
-  await loadAiBooksAdmin();
+    const rows = chunks.map(c => ({ book_id: book.id, room, page: c.page, content: c.text }));
+    for (let i = 0; i < rows.length; i += 100) {
+      btn.textContent = `${lang === 'en' ? 'Indexing' : 'بفهرس'} ${Math.min(i + 100, rows.length)}/${rows.length}`;
+      const { error: chErr } = await sb.from('ai_book_chunks').insert(rows.slice(i, i + 100));
+      if (chErr) return alert(chErr.message);
+    }
+
+    fileInput.value = '';
+    alert(lang === 'en'
+      ? `Book uploaded and indexed (${rows.length} parts).`
+      : `الكتاب اترفع واتفهرس (${rows.length} جزء).`);
+  } catch (e) {
+    alert((lang === 'en' ? 'Upload failed: ' : 'فشل الرفع: ') + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = oldText;
+    await loadAiBooksAdmin();
+  }
 }
 
 async function deleteBook(b) {
@@ -263,7 +347,7 @@ $('ai-file').onchange = async () => {
   if (!f) return;
 
   if (!AI_MIME.includes(f.type)) {
-    return alert(aiLangMode === 'en' ? 'Only PDF or image files are supported' : 'الملفات المدعومة: PDF أو صور');
+    return alert(aiLangMode === 'en' ? 'Only image files are supported' : 'حالياً بنقبل صور بس (PNG أو JPG أو WEBP)');
   }
   if (f.size > AI_MAX_FILE) {
     return alert(aiLangMode === 'en' ? 'Max file size is 5 MB' : 'أقصى حجم للملف 5 ميجا');
