@@ -39,11 +39,16 @@ function hideGate() {
   gateEl.classList.add('hidden');
 }
 
+// لو الفحص فشل، البوابة بتفضل مقفولة وتوضح سبب الفشل (مش بتتخفي بصمت)
 async function checkRoomGate() {
   const { data: sess } = await sb.auth.getSession();
   if (!sess.session) return;
   const { data, error } = await sb.rpc('has_room_access', { p_room: currentRoom() });
-  if (error) return;
+  if (error) {
+    showGate();
+    $('gate-err').textContent = error.message;
+    return;
+  }
   if (data === true) hideGate();
   else showGate();
 }

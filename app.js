@@ -4,7 +4,7 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const $ = id => document.getElementById(id);
 
-const CONTACT_EMAIL = 'its.toxic0807@gmail.com';
+const CONTACT_EMAIL = 'tfm.chat08@gmail.com';
 const BASE_TITLE = 'TFM Chat';
 const EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🔥'];
 
@@ -179,12 +179,26 @@ function applyRoomUI() {
 $('track-select').onchange = () => {
   track = $('track-select').value;
   saveRoom();
+  onRoomChanged();
 };
 
 $('level-select').onchange = () => {
   level = Number($('level-select').value);
   saveRoom();
+  onRoomChanged();
 };
+
+// لما الشعبة أو المستوى يتغيروا: نفضّي الرسايل القديمة، نفحص كود الدخول، ونحمّل رسايل الشعبة الجديدة
+function onRoomChanged() {
+  if (!currentProfile) return;
+  $('messages').innerHTML = '';
+  msgById = new Map();
+  reactMap.clear();
+  renderPinned();
+  if (typeof checkRoomGate === 'function') checkRoomGate();
+  loadMessages();
+  joinTyping();
+}
 
 // ---------- متغيرات ----------
 let currentProfile = null;
@@ -396,7 +410,12 @@ $('recovery-btn').onclick = async () => {
 };
 
 // ---------- حالة الجلسة ----------
-sb.auth.onAuthStateChange(async (event, session) => {
+// setTimeout عشان ما نعملش استدعاءات لـ Supabase جوه الـ callback مباشرة (ممكن تعمل تعليق)
+sb.auth.onAuthStateChange((event, session) => {
+  setTimeout(() => handleAuthChange(event, session), 0);
+});
+
+async function handleAuthChange(event, session) {
   if (event === 'PASSWORD_RECOVERY') {
     recovering = true;
     showScreen('recovery-screen');
@@ -411,7 +430,7 @@ sb.auth.onAuthStateChange(async (event, session) => {
     leaveTyping();
     showScreen('auth-screen');
   }
-});
+}
 
 async function enterChat(userId) {
   const ok = await loadProfile(userId);
