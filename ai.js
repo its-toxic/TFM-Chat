@@ -356,6 +356,72 @@ function appendAiBubble(role, text, extra = '') {
   return div;
 }
 
+// أزرار تحت آخر رد بس: احفظ كارت، لخّص، اختبرني
+const CARD_PROMPT = 'من الرد اللي فوق اعمل كارت مذاكرة. رجّع JSON بس من غير أي كلام قبله أو بعده، بالشكل ده بالظبط: {"q":"السؤال","a":"الجواب"}';
+const CARDS_KEY = 'fahem_cards';
+
+function appendAiReply(text) {
+  document.querySelectorAll('.ai-actions').forEach(x => x.remove());
+  appendAiBubble('model', text);
+  const en = aiLangMode === 'en';
+  const bar = document.createElement('div');
+  bar.className = 'ai-actions';
+  const actions = [
+    [en ? '🧠 Save card' : '🧠 احفظ كارت', () => aiSend(false, {
+      display: en ? 'Save a card from the reply above' : 'احفظ كارت من الرد اللي فوق',
+      text: CARD_PROMPT,
+      card: true,
+    })],
+    [en ? '📝 Summarize' : '📝 لخّص', () => aiSend(false, {
+      display: en ? 'Summarize the reply above' : 'لخّص الرد اللي فوق',
+      text: en ? 'Summarize the reply above in 3 short points.' : 'لخّص الرد اللي فوق في 3 نقط قصيرة.',
+    })],
+    [en ? '❓ Quiz me' : '❓ اختبرني', () => aiSend(false, {
+      display: en ? 'Quiz me on the reply above' : 'اختبرني على الرد اللي فوق',
+      text: en
+        ? 'Make 3 multiple-choice questions based on the reply above, with 4 options each. Do not reveal the correct answers until I reply.'
+        : 'اعملي 3 أسئلة اختيار من متعدد على الرد اللي فوق، كل سؤال فيه 4 اختيارات. ماتقولش الإجابات الصح غير لما أجاوب.',
+    })],
+  ];
+  actions.forEach(([label, fn]) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = label;
+    b.onclick = fn;
+    bar.appendChild(b);
+  });
+  $('ai-messages').appendChild(bar);
+}
+
+function loadCards() {
+  try { return JSON.parse(localStorage.getItem(CARDS_KEY) || '[]'); } catch { return []; }
+}
+
+function saveCards(list) {
+  try { localStorage.setItem(CARDS_KEY, JSON.stringify(list)); } catch {}
+}
+
+function saveCard(reply) {
+  const m = String(reply || '').match(/\{[\s\S]*\}/);
+  let card = null;
+  try { card = m ? JSON.parse(m[0]) : null; } catch {}
+  if (!card || !card.q || !card.a) {
+    return appendAiBubble('model', aiLangMode === 'en' ? "Couldn't make a card, try again." : 'ما قدرتش أعمل الكارت، جرّب تاني.');
+  }
+  const list = loadCards();
+  list.push({ q: String(card.q), a: String(card.a), room: aiRoom, at: Date.now() });
+  saveCards(list);
+  appendAiBubble('model', (aiLangMode === 'en' ? '🧠 Card saved: ' : '🧠 اتحفظ الكارت: ') + card.q);
+}
+
+function showCards() {
+  const mine = loadCards().filter(c => c.room === aiRoom);
+  if (!mine.length) {
+    return appendAiBubble('model', aiLangMode === 'en' ? 'No cards in this room yet.' : 'مفيش كروت في الشعبة دي لسه.');
+  }
+  mine.forEach((c, i) => appendAiBubble('model', `${i + 1}. ❓ ${c.q}\n✅ ${c.a}`));
+}
+
 function applyAiLabels() {
   const n = aiNames();
   $('ai-name-ar').textContent = n.ar;
@@ -394,7 +460,7 @@ async function renderAiHistory() {
     return;
   }
 
-  data.forEach(m => appendAiBubble(m.role === 'user' ? 'user' : 'model', m.content));
+  data.forEach(m => (m.role === 'user' ? appendAiBubble('user', m.content) : appendAiReply(m.content)));
   box.scrollTop = box.scrollHeight;
 }
 
@@ -429,12 +495,13 @@ function clearAiFile() {
 }
 
 // fromVoice = true لما الرسالة جاية من الميكروفون، وقتها الرد بيتقري بصوت
-async function aiSend(fromVoice = false) {
+// opts: text = نص مختلف عن اللي المستخدم كتبه، display = اللي يظهر في الشات، card = احفظ الرد ككارت
+async function aiSend(fromVoice = false, opts = {}) {
   if (aiBusy || !aiRoom) return;
-  const text = $('ai-input').value.trim();
+  const text = opts.text !== undefined ? opts.text : $('ai-input').value.trim();
   if (!text && !aiPending) return;
 
-  const shown = (text + (aiPending ? `\n📎 ${aiPending.name}` : '')).trim();
+  const shown = ((opts.display ?? text) + (aiPending ? `\n📎 ${aiPending.name}` : '')).trim();
   appendAiBubble('user', shown);
 
   const payload = { room: aiRoom, message: text, lang: aiLangMode };
@@ -442,7 +509,7 @@ async function aiSend(fromVoice = false) {
     payload.file = { name: aiPending.name, mime: aiPending.mime, data: aiPending.data };
   }
 
-  $('ai-input').value = '';
+  if (opts.text === undefined) $('ai-input').value = '';
   clearAiFile();
 
   aiBusy = true;
@@ -469,7 +536,8 @@ async function aiSend(fromVoice = false) {
     const j = await res.json().catch(() => ({}));
     thinking.remove();
     if (!res.ok) throw new Error(j.error || ('Error ' + res.status));
-    appendAiBubble('model', j.reply);
+    if (opts.card) saveCard(j.reply);
+    else appendAiReply(j.reply);
     const wasExam = aiExamMode;
     aiExamMode = aiScanExam([text], aiExamMode);
     applyAiLabels();
@@ -681,6 +749,9 @@ $('ai-lang').onclick = async () => {
   await renderAiHistory();
 };
 
+// الكروت: عرض كروت الشعبة الحالية
+$('ai-cards').onclick = () => showCards();
+
 // أعد الرد: بيمسح آخر رد ويبعت آخر سؤال تاني
 $('ai-regen').onclick = async () => {
   if (aiBusy || !aiRoom) return;
@@ -765,6 +836,9 @@ sb.auth.onAuthStateChange((event, session) => {
 (function injectVoiceStyle() {
   const st = document.createElement('style');
   st.textContent = `
+    .ai-actions { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 10px; }
+    .ai-actions button { border: 1px solid #6e0819; background: transparent; color: #6e0819; border-radius: 12px; padding: 4px 10px; font-size: 13px; cursor: pointer; }
+    .ai-actions button:active { background: #6e0819; color: #fff; }
     .ai-suggest { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0 12px; }
     .ai-chip { border: 1px solid #6e0819; background: transparent; color: #6e0819; border-radius: 16px; padding: 7px 12px; font-size: 14px; cursor: pointer; text-align: start; }
     .ai-chip:active { background: #6e0819; color: #fff; }
