@@ -123,6 +123,14 @@ function submitQuiz() {
         : txt(`غلط ❌. الإجابة الصح: ${item.options[item.answer]}`, `Wrong ❌. Correct answer: ${item.options[item.answer]}`));
     fs.appendChild(hint);
 
+    // شرح اختياري للسؤال لو موجود في الملف
+    if (item.explain) {
+      const ex = document.createElement('div');
+      ex.className = 'hint';
+      ex.textContent = txt('الشرح: ', 'Explanation: ') + String(item.explain);
+      fs.appendChild(ex);
+    }
+
     fs.querySelectorAll('input').forEach(i => { i.disabled = true; });
   });
 
