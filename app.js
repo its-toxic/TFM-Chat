@@ -1696,6 +1696,27 @@ async function loadUsers() {
         else await loadUsers();
       };
       row.appendChild(kb);
+
+      // حذف الحساب نهائياً (الأدمن بس، ومش بيتنفذ على أدمن)
+      const db = document.createElement('button');
+      db.textContent = 'حذف';
+      db.className = 'danger-btn';
+      db.onclick = async () => {
+        if (p.role === 'admin') return alert('مينفعش تحذف أدمن من هنا');
+        const name = p.display_name || p.id.slice(0, 8);
+        if (!confirm(`هتحذف حساب "${name}" نهائياً ورسايله وبياناته؟ ومش هيرجع.`)) return;
+        try {
+          const { data, error } = await sb.functions.invoke('admin-delete-user', { body: { userId: p.id } });
+          if (error || (data && data.error)) {
+            alert('الحذف ما اتعملش: ' + ((data && data.error) || (error && error.message) || ''));
+            return;
+          }
+          await loadUsers();
+        } catch {
+          alert('حصلت مشكلة، جرّب تاني.');
+        }
+      };
+      row.appendChild(db);
     }
 
     box.appendChild(row);
